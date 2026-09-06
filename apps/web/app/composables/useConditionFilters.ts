@@ -15,8 +15,13 @@ export interface ConditionFilters {
   minScore: number;
   minAltitudeM: number;
   maxAltitudeM: number;
-  /** Stazione evidenziata, per id. Vuoto = nessuna. */
-  stationId: string;
+  /**
+   * Stazioni selezionate, per id. Vuoto = nessuna selezione, si vedono tutte.
+   *
+   * Piu' di una perche' il confronto fra due o tre posti e' la domanda
+   * successiva a "dov'e' Corsicchie".
+   */
+  stationIds: string[];
 }
 
 export const FILTER_DEFAULTS: ConditionFilters = {
@@ -24,7 +29,7 @@ export const FILTER_DEFAULTS: ConditionFilters = {
   minScore: 0,
   minAltitudeM: 300,
   maxAltitudeM: 1500,
-  stationId: '',
+  stationIds: [],
 };
 
 /** Estremi dello slider di quota: dal livello del mare alla vetta piu' alta della rete. */
@@ -40,6 +45,13 @@ function readString(value: unknown, fallback: string): string {
   return typeof v === 'string' && v.length > 0 ? v : fallback;
 }
 
+/** Gli id viaggiano separati da virgola: `?stazione=abc,def`. */
+function readIds(value: unknown): string[] {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (typeof raw !== 'string' || raw.length === 0) return [];
+  return raw.split(',').filter((id) => id.length > 0);
+}
+
 export function useConditionFilters() {
   const route = useRoute();
   const router = useRouter();
@@ -49,7 +61,7 @@ export function useConditionFilters() {
     minScore: readNumber(route.query['punteggio'], FILTER_DEFAULTS.minScore),
     minAltitudeM: readNumber(route.query['quotaMin'], FILTER_DEFAULTS.minAltitudeM),
     maxAltitudeM: readNumber(route.query['quotaMax'], FILTER_DEFAULTS.maxAltitudeM),
-    stationId: readString(route.query['stazione'], FILTER_DEFAULTS.stationId),
+    stationIds: readIds(route.query['stazione']),
   }));
 
   /**
@@ -71,7 +83,7 @@ export function useConditionFilters() {
     set('punteggio', next.minScore, FILTER_DEFAULTS.minScore);
     set('quotaMin', next.minAltitudeM, FILTER_DEFAULTS.minAltitudeM);
     set('quotaMax', next.maxAltitudeM, FILTER_DEFAULTS.maxAltitudeM);
-    set('stazione', next.stationId, FILTER_DEFAULTS.stationId);
+    set('stazione', next.stationIds.join(','), '');
 
     // `replace` e non `push`: trascinare uno slider non deve riempire la
     // cronologia di venti voci.
@@ -96,9 +108,9 @@ export function useConditionFilters() {
     set: (v) => update({ species: v }),
   });
 
-  const stationId = computed<string>({
-    get: () => filters.value.stationId,
-    set: (v) => update({ stationId: v }),
+  const stationIds = computed<string[]>({
+    get: () => filters.value.stationIds,
+    set: (v) => update({ stationIds: v }),
   });
 
   const isDefault = computed(
@@ -107,12 +119,12 @@ export function useConditionFilters() {
       filters.value.minScore === FILTER_DEFAULTS.minScore &&
       filters.value.minAltitudeM === FILTER_DEFAULTS.minAltitudeM &&
       filters.value.maxAltitudeM === FILTER_DEFAULTS.maxAltitudeM &&
-      filters.value.stationId === FILTER_DEFAULTS.stationId,
+      filters.value.stationIds.length === 0,
   );
 
   function reset(): void {
     update(FILTER_DEFAULTS);
   }
 
-  return { filters, update, reset, isDefault, altitudeRange, minScore, species, stationId };
+  return { filters, update, reset, isDefault, altitudeRange, minScore, species, stationIds };
 }

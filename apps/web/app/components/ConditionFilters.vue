@@ -7,7 +7,7 @@ const props = defineProps<{
   speciesOptions: SpeciesOption[];
 }>();
 
-const { altitudeRange, minScore, species, stationId, reset, isDefault } = useConditionFilters();
+const { altitudeRange, minScore, species, stationIds, reset, isDefault } = useConditionFilters();
 
 /**
  * Voci dell'autocomplete.
@@ -31,10 +31,12 @@ const stationItems = computed(() =>
     })),
 );
 
-const selectedStation = computed({
-  get: () => stationItems.value.find((i) => i.value === stationId.value) ?? undefined,
-  set: (item) => {
-    stationId.value = item?.value ?? '';
+type StationItem = { label: string; suffix: string; value: string };
+
+const selectedStations = computed<StationItem[]>({
+  get: () => stationItems.value.filter((i) => stationIds.value.includes(i.value)),
+  set: (items) => {
+    stationIds.value = items.map((i) => i.value);
   },
 });
 
@@ -49,7 +51,7 @@ const speciesItems = computed(() =>
  * stazione: sembrerebbe un errore invece che una conseguenza dei filtri.
  */
 const selectedButFiltered = computed(
-  () => stationId.value !== '' && !stationItems.value.some((i) => i.value === stationId.value),
+  () => stationIds.value.filter((id) => !stationItems.value.some((i) => i.value === id)).length,
 );
 </script>
 
@@ -72,16 +74,17 @@ const selectedButFiltered = computed(
       <UFormField
         label="Cerca una stazione"
         :help="
-          selectedButFiltered
-            ? 'La stazione scelta è fuori dai filtri attuali: allargali per rivederla.'
-            : 'Selezionala per evidenziarla sulla mappa'
+          selectedButFiltered > 0
+            ? `${selectedButFiltered} stazione/i scelta/e è fuori dai filtri attuali: allargali per rivederla.`
+            : 'Selezionane una o più: la tabella mostra solo quelle, la mappa le evidenzia.'
         "
-        :ui="selectedButFiltered ? { help: 'text-warning' } : undefined"
+        :ui="selectedButFiltered > 0 ? { help: 'text-warning' } : undefined"
       >
         <UInputMenu
-          v-model="selectedStation"
+          v-model="selectedStations"
+          multiple
           :items="stationItems"
-          placeholder="Verghereto, Lagdei, Pievepelago…"
+          placeholder="Corsicchie, Verghereto, Lagdei…"
           icon="i-lucide-search"
           :search-input="{ placeholder: 'Scrivi il nome…' }"
           class="w-full"

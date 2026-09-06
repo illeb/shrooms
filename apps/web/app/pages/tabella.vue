@@ -2,9 +2,22 @@
 import type { TableColumn } from '@nuxt/ui';
 import { CLASS_BADGE, type Prediction } from '~/composables/useConditions';
 
-const { rows, species, model, latestDate, pending, error, refresh, positives } =
-  await useConditions();
-const { stationId } = useConditionFilters();
+const { rows, species, model, latestDate, pending, error, refresh } = await useConditions();
+const { stationIds } = useConditionFilters();
+
+/**
+ * Con una selezione attiva la tabella mostra solo quelle stazioni.
+ *
+ * E' il senso della ricerca: chi cerca "Corsicchie" vuole vedere Corsicchie,
+ * non trovarla evidenziata in mezzo ad altre centottanta righe.
+ */
+const visibleRows = computed(() =>
+  stationIds.value.length === 0
+    ? rows.value
+    : rows.value.filter((r) => stationIds.value.includes(r.station.id)),
+);
+
+const positives = computed(() => visibleRows.value.filter((r) => r.score > 0).length);
 
 /**
  * Intestazione cliccabile per riordinare.
@@ -138,8 +151,11 @@ const sorting = ref([{ id: 'score', desc: true }]);
 
     <div class="mb-3 flex items-center justify-between text-sm text-muted">
       <span>
-        {{ rows.length }} stazioni · <strong class="text-default">{{ positives }}</strong> con
-        condizioni in corso
+        <template v-if="stationIds.length > 0">
+          {{ visibleRows.length }} selezionate su {{ rows.length }} ·
+        </template>
+        <template v-else> {{ rows.length }} stazioni · </template>
+        <strong class="text-default">{{ positives }}</strong> con condizioni in corso
       </span>
       <UButton
         icon="i-lucide-refresh-cw"
@@ -155,7 +171,7 @@ const sorting = ref([{ id: 'score', desc: true }]);
 
     <UTable
       v-model:sorting="sorting"
-      :data="rows"
+      :data="visibleRows"
       :columns="columns"
       :loading="pending"
       sticky

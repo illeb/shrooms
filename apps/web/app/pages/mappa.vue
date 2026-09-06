@@ -3,7 +3,7 @@ import { CLASS_COLOR } from '~/composables/useConditions';
 
 const { rows, species, model, latestDate, pending, error, refresh, positives } =
   await useConditions();
-const { stationId } = useConditionFilters();
+const { stationIds } = useConditionFilters();
 
 const legend = [
   { label: 'buona / eccezionale', color: CLASS_COLOR.buona },
@@ -55,7 +55,7 @@ const legend = [
 
     <div class="h-[70vh] overflow-hidden rounded-lg border border-default">
       <ClientOnly>
-        <ConditionsMap :rows="rows" :highlight-id="stationId" />
+        <ConditionsMap :rows="rows" :highlight-ids="stationIds" />
         <template #fallback>
           <div class="flex h-full items-center justify-center text-muted">
             <UIcon name="i-lucide-loader-circle" class="size-5 animate-spin" />

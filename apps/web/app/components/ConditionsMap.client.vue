@@ -1,5 +1,12 @@
 <script setup lang="ts">
-import { CircleMarker, Map as LeafletMap, TileLayer, layerGroup, type LayerGroup } from 'leaflet';
+import {
+  CircleMarker,
+  latLngBounds,
+  layerGroup,
+  Map as LeafletMap,
+  TileLayer,
+  type LayerGroup,
+} from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { CLASS_COLOR, type Prediction } from '~/composables/useConditions';
 
@@ -17,7 +24,7 @@ import { CLASS_COLOR, type Prediction } from '~/composables/useConditions';
  * problema di percorsi degli asset, e il colore si imposta direttamente.
  */
 
-const props = defineProps<{ rows: Prediction[]; highlightId?: string }>();
+const props = defineProps<{ rows: Prediction[]; highlightIds?: string[] }>();
 
 const container = ref<HTMLElement | null>(null);
 const initError = ref<string | null>(null);
@@ -91,16 +98,19 @@ function render(rows: readonly Prediction[]) {
 }
 
 /**
- * Evidenzia la stazione scelta: la porta al centro, le mette un anello scuro
- * e le apre il popup.
+ * Evidenzia le stazioni scelte e le porta nell'inquadratura.
  *
- * E' il caso d'uso di partenza: "cerco Verghereto ma non ricordo dove sta".
- * Cambiare solo il colore non basterebbe fra duecento punti - va portata
- * nell'inquadratura.
+ * E' il caso d'uso di partenza: "cerco Corsicchie ma non ricordo dove sta".
+ * Cambiare solo il colore non basterebbe fra duecento punti - vanno portate
+ * dentro la vista. Con una sola stazione si vola su di lei e si apre il
+ * popup; con piu' di una si inquadrano tutte, perche' aprire tre popup
+ * sovrapposti non aiuterebbe nessuno.
  */
 function applyHighlight() {
+  const selected = new Set(props.highlightIds ?? []);
+
   for (const [id, marker] of byStation) {
-    const on = id === props.highlightId;
+    const on = selected.has(id);
     marker.setStyle({
       color: on ? '#1c1917' : '#ffffff',
       weight: on ? 3 : 1.5,
@@ -109,12 +119,25 @@ function applyHighlight() {
     if (on) marker.bringToFront();
   }
 
-  if (!props.highlightId || !map) return;
-  const target = byStation.get(props.highlightId);
-  if (!target) return;
+  if (!map || selected.size === 0) return;
 
-  map.flyTo(target.getLatLng(), Math.max(map.getZoom(), 10), { duration: 0.8 });
-  target.openPopup();
+  const targets = [...selected]
+    .map((id) => byStation.get(id))
+    .filter((m): m is CircleMarker => m !== undefined);
+  if (targets.length === 0) return;
+
+  if (targets.length === 1) {
+    const only = targets[0]!;
+    map.flyTo(only.getLatLng(), Math.max(map.getZoom(), 10), { duration: 0.8 });
+    only.openPopup();
+    return;
+  }
+
+  map.flyToBounds(latLngBounds(targets.map((m) => m.getLatLng())), {
+    padding: [60, 60],
+    maxZoom: 12,
+    duration: 0.8,
+  });
 }
 
 onMounted(async () => {
@@ -153,7 +176,7 @@ onMounted(async () => {
 });
 
 watch(() => props.rows, render, { deep: true });
-watch(() => props.highlightId, applyHighlight);
+watch(() => props.highlightIds, applyHighlight, { deep: true });
 
 onBeforeUnmount(() => {
   map?.remove();
