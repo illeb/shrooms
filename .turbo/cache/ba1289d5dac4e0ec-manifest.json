@@ -1,0 +1,565 @@
+{
+  "files": {
+    "packages/mycology-core/dist/cjs/water/eto.d.ts": {
+      "size": 1649,
+      "mtime_nanos": 1788695122540019660,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/esm/profiles/boletus-edulis.js.map": {
+      "size": 3243,
+      "mtime_nanos": 1788695122739465512,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/profiles/boletus-edulis.d.ts": {
+      "size": 1508,
+      "mtime_nanos": 1788695122559735121,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/scoring/trigger.d.ts": {
+      "size": 2360,
+      "mtime_nanos": 1788695122553590355,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/water/balance.js.map": {
+      "size": 1824,
+      "mtime_nanos": 1788695122541736695,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/profiles/boletus-edulis.js": {
+      "size": 7865,
+      "mtime_nanos": 1788695122559399248,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/esm": { "size": 0, "mtime_nanos": 0, "mode": 0, "is_dir": true },
+    "packages/mycology-core/dist/esm/features/build.js": {
+      "size": 4646,
+      "mtime_nanos": 1788695122734842698,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/features": {
+      "size": 0,
+      "mtime_nanos": 0,
+      "mode": 0,
+      "is_dir": true
+    },
+    "packages/mycology-core/dist/cjs/features/windows.js": {
+      "size": 4403,
+      "mtime_nanos": 1788695122544109269,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/features/build.js": {
+      "size": 5108,
+      "mtime_nanos": 1788695122550537951,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/esm/math/membership.js.map": {
+      "size": 2711,
+      "mtime_nanos": 1788695122726071067,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/esm/scoring/engine.js": {
+      "size": 6249,
+      "mtime_nanos": 1788695122737483437,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/esm/index.js.map": {
+      "size": 414,
+      "mtime_nanos": 1788695122739921219,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/math": {
+      "size": 0,
+      "mtime_nanos": 0,
+      "mode": 0,
+      "is_dir": true
+    },
+    "packages/mycology-core/dist/esm/profiles": {
+      "size": 0,
+      "mtime_nanos": 0,
+      "mode": 0,
+      "is_dir": true
+    },
+    "packages/mycology-core/dist/esm/scoring/trigger.js.map": {
+      "size": 2792,
+      "mtime_nanos": 1788695122735822944,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/math/membership.d.ts.map": {
+      "size": 1312,
+      "mtime_nanos": 1788695122537616837,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/water/eto.js.map": {
+      "size": 2453,
+      "mtime_nanos": 1788695122539443579,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/esm/water": {
+      "size": 0,
+      "mtime_nanos": 0,
+      "mode": 0,
+      "is_dir": true
+    },
+    "packages/mycology-core/dist/cjs/features/windows.d.ts.map": {
+      "size": 832,
+      "mtime_nanos": 1788695122544678641,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/water": {
+      "size": 0,
+      "mtime_nanos": 0,
+      "mode": 0,
+      "is_dir": true
+    },
+    "packages/mycology-core/dist/cjs/index.d.ts.map": {
+      "size": 357,
+      "mtime_nanos": 1788695122560664118,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/types.d.ts": {
+      "size": 7923,
+      "mtime_nanos": 1788695122547987586,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/water/balance.d.ts": {
+      "size": 2527,
+      "mtime_nanos": 1788695122542563691,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/water/eto.d.ts.map": {
+      "size": 685,
+      "mtime_nanos": 1788695122539962827,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/esm/package.json": {
+      "size": 23,
+      "mtime_nanos": 1788695122763990037,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/esm/scoring/trigger.js": {
+      "size": 3974,
+      "mtime_nanos": 1788695122735878277,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/scoring/yield-model.js.map": {
+      "size": 2657,
+      "mtime_nanos": 1788695122557698630,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/profiles": {
+      "size": 0,
+      "mtime_nanos": 0,
+      "mode": 0,
+      "is_dir": true
+    },
+    "packages/mycology-core/dist/cjs/profiles/boletus-edulis.js.map": {
+      "size": 3204,
+      "mtime_nanos": 1788695122559305373,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/types.d.ts.map": {
+      "size": 4246,
+      "mtime_nanos": 1788695122547835378,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/esm/scoring": {
+      "size": 0,
+      "mtime_nanos": 0,
+      "mode": 0,
+      "is_dir": true
+    },
+    "packages/mycology-core/dist/cjs/features/windows.d.ts": {
+      "size": 1990,
+      "mtime_nanos": 1788695122544739266,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/types.js.map": {
+      "size": 1111,
+      "mtime_nanos": 1788695122545392597,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/index.d.ts": {
+      "size": 1021,
+      "mtime_nanos": 1788695122560719492,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/scoring/trigger.js.map": {
+      "size": 2765,
+      "mtime_nanos": 1788695122553028024,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/esm/scoring/yield-model.js.map": {
+      "size": 2666,
+      "mtime_nanos": 1788695122738547016,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/scoring/yield-model.d.ts": {
+      "size": 2745,
+      "mtime_nanos": 1788695122558496418,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/scoring/engine.js.map": {
+      "size": 5472,
+      "mtime_nanos": 1788695122555695096,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/math/membership.js": {
+      "size": 3389,
+      "mtime_nanos": 1788695122535085514,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/profiles/boletus-edulis.d.ts.map": {
+      "size": 254,
+      "mtime_nanos": 1788695122559672872,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/scoring/yield-model.d.ts.map": {
+      "size": 784,
+      "mtime_nanos": 1788695122558431752,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/water/balance.js": {
+      "size": 2958,
+      "mtime_nanos": 1788695122541833820,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/esm/profiles/boletus-edulis.js": {
+      "size": 7747,
+      "mtime_nanos": 1788695122739561095,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/math/membership.d.ts": {
+      "size": 2594,
+      "mtime_nanos": 1788695122537709378,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/features/build.js.map": {
+      "size": 4702,
+      "mtime_nanos": 1788695122550389576,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/esm/math/membership.js": {
+      "size": 3130,
+      "mtime_nanos": 1788695122726191692,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/scoring/yield-model.js": {
+      "size": 4392,
+      "mtime_nanos": 1788695122557796963,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/scoring/engine.js": {
+      "size": 6663,
+      "mtime_nanos": 1788695122555919679,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/index.js": {
+      "size": 2040,
+      "mtime_nanos": 1788695122560464243,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/esm/features/windows.js": {
+      "size": 4172,
+      "mtime_nanos": 1788695122732363791,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/features/build.d.ts": {
+      "size": 1777,
+      "mtime_nanos": 1788695122551874612,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/features/build.d.ts.map": {
+      "size": 939,
+      "mtime_nanos": 1788695122551789154,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/scoring/engine.d.ts.map": {
+      "size": 693,
+      "mtime_nanos": 1788695122556525801,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/features/windows.js.map": {
+      "size": 3722,
+      "mtime_nanos": 1788695122544032852,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/scoring/trigger.d.ts.map": {
+      "size": 825,
+      "mtime_nanos": 1788695122553527564,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/water/balance.d.ts.map": {
+      "size": 874,
+      "mtime_nanos": 1788695122542490900,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/types.js": {
+      "size": 1899,
+      "mtime_nanos": 1788695122545454638,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/esm/features/build.js.map": {
+      "size": 4740,
+      "mtime_nanos": 1788695122734704198,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/esm/scoring/engine.js.map": {
+      "size": 5502,
+      "mtime_nanos": 1788695122737303438,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/esm/types.js": {
+      "size": 1700,
+      "mtime_nanos": 1788695122733017372,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist": { "size": 0, "mtime_nanos": 0, "mode": 0, "is_dir": true },
+    "packages/mycology-core/dist/esm/index.js": {
+      "size": 1103,
+      "mtime_nanos": 1788695122739976885,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/esm/water/balance.js.map": {
+      "size": 1843,
+      "mtime_nanos": 1788695122730739548,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/package.json": {
+      "size": 25,
+      "mtime_nanos": 1788695122763880037,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/esm/water/eto.js.map": {
+      "size": 2425,
+      "mtime_nanos": 1788695122729086888,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/scoring": {
+      "size": 0,
+      "mtime_nanos": 0,
+      "mode": 0,
+      "is_dir": true
+    },
+    "packages/mycology-core/dist/cjs/index.js.map": {
+      "size": 332,
+      "mtime_nanos": 1788695122560409119,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/esm/scoring/yield-model.js": {
+      "size": 4139,
+      "mtime_nanos": 1788695122738659974,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/esm/types.js.map": {
+      "size": 1094,
+      "mtime_nanos": 1788695122732935997,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/scoring/engine.d.ts": {
+      "size": 1608,
+      "mtime_nanos": 1788695122556629967,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/esm/features/windows.js.map": {
+      "size": 3683,
+      "mtime_nanos": 1788695122732276041,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/math/membership.js.map": {
+      "size": 2765,
+      "mtime_nanos": 1788695122534059018,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/esm/math": {
+      "size": 0,
+      "mtime_nanos": 0,
+      "mode": 0,
+      "is_dir": true
+    },
+    "packages/mycology-core/dist/esm/water/eto.js": {
+      "size": 2983,
+      "mtime_nanos": 1788695122729183179,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/.turbo/turbo-build.log": {
+      "size": 265,
+      "mtime_nanos": 1788695122770820801,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs/water/eto.js": {
+      "size": 3172,
+      "mtime_nanos": 1788695122539546370,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/esm/features": {
+      "size": 0,
+      "mtime_nanos": 0,
+      "mode": 0,
+      "is_dir": true
+    },
+    "packages/mycology-core/dist/esm/water/balance.js": {
+      "size": 2682,
+      "mtime_nanos": 1788695122730870297,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/mycology-core/dist/cjs": { "size": 0, "mtime_nanos": 0, "mode": 0, "is_dir": true },
+    "packages/mycology-core/dist/cjs/scoring/trigger.js": {
+      "size": 4194,
+      "mtime_nanos": 1788695122553106273,
+      "mode": 420,
+      "is_dir": false
+    }
+  },
+  "order": [
+    "packages/mycology-core/.turbo/turbo-build.log",
+    "packages/mycology-core/dist",
+    "packages/mycology-core/dist/cjs",
+    "packages/mycology-core/dist/cjs/features",
+    "packages/mycology-core/dist/cjs/features/build.d.ts",
+    "packages/mycology-core/dist/cjs/features/build.d.ts.map",
+    "packages/mycology-core/dist/cjs/features/build.js",
+    "packages/mycology-core/dist/cjs/features/build.js.map",
+    "packages/mycology-core/dist/cjs/features/windows.d.ts",
+    "packages/mycology-core/dist/cjs/features/windows.d.ts.map",
+    "packages/mycology-core/dist/cjs/features/windows.js",
+    "packages/mycology-core/dist/cjs/features/windows.js.map",
+    "packages/mycology-core/dist/cjs/index.d.ts",
+    "packages/mycology-core/dist/cjs/index.d.ts.map",
+    "packages/mycology-core/dist/cjs/index.js",
+    "packages/mycology-core/dist/cjs/index.js.map",
+    "packages/mycology-core/dist/cjs/math",
+    "packages/mycology-core/dist/cjs/math/membership.d.ts",
+    "packages/mycology-core/dist/cjs/math/membership.d.ts.map",
+    "packages/mycology-core/dist/cjs/math/membership.js",
+    "packages/mycology-core/dist/cjs/math/membership.js.map",
+    "packages/mycology-core/dist/cjs/package.json",
+    "packages/mycology-core/dist/cjs/profiles",
+    "packages/mycology-core/dist/cjs/profiles/boletus-edulis.d.ts",
+    "packages/mycology-core/dist/cjs/profiles/boletus-edulis.d.ts.map",
+    "packages/mycology-core/dist/cjs/profiles/boletus-edulis.js",
+    "packages/mycology-core/dist/cjs/profiles/boletus-edulis.js.map",
+    "packages/mycology-core/dist/cjs/scoring",
+    "packages/mycology-core/dist/cjs/scoring/engine.d.ts",
+    "packages/mycology-core/dist/cjs/scoring/engine.d.ts.map",
+    "packages/mycology-core/dist/cjs/scoring/engine.js",
+    "packages/mycology-core/dist/cjs/scoring/engine.js.map",
+    "packages/mycology-core/dist/cjs/scoring/trigger.d.ts",
+    "packages/mycology-core/dist/cjs/scoring/trigger.d.ts.map",
+    "packages/mycology-core/dist/cjs/scoring/trigger.js",
+    "packages/mycology-core/dist/cjs/scoring/trigger.js.map",
+    "packages/mycology-core/dist/cjs/scoring/yield-model.d.ts",
+    "packages/mycology-core/dist/cjs/scoring/yield-model.d.ts.map",
+    "packages/mycology-core/dist/cjs/scoring/yield-model.js",
+    "packages/mycology-core/dist/cjs/scoring/yield-model.js.map",
+    "packages/mycology-core/dist/cjs/types.d.ts",
+    "packages/mycology-core/dist/cjs/types.d.ts.map",
+    "packages/mycology-core/dist/cjs/types.js",
+    "packages/mycology-core/dist/cjs/types.js.map",
+    "packages/mycology-core/dist/cjs/water",
+    "packages/mycology-core/dist/cjs/water/balance.d.ts",
+    "packages/mycology-core/dist/cjs/water/balance.d.ts.map",
+    "packages/mycology-core/dist/cjs/water/balance.js",
+    "packages/mycology-core/dist/cjs/water/balance.js.map",
+    "packages/mycology-core/dist/cjs/water/eto.d.ts",
+    "packages/mycology-core/dist/cjs/water/eto.d.ts.map",
+    "packages/mycology-core/dist/cjs/water/eto.js",
+    "packages/mycology-core/dist/cjs/water/eto.js.map",
+    "packages/mycology-core/dist/esm",
+    "packages/mycology-core/dist/esm/features",
+    "packages/mycology-core/dist/esm/features/build.js",
+    "packages/mycology-core/dist/esm/features/build.js.map",
+    "packages/mycology-core/dist/esm/features/windows.js",
+    "packages/mycology-core/dist/esm/features/windows.js.map",
+    "packages/mycology-core/dist/esm/index.js",
+    "packages/mycology-core/dist/esm/index.js.map",
+    "packages/mycology-core/dist/esm/math",
+    "packages/mycology-core/dist/esm/math/membership.js",
+    "packages/mycology-core/dist/esm/math/membership.js.map",
+    "packages/mycology-core/dist/esm/package.json",
+    "packages/mycology-core/dist/esm/profiles",
+    "packages/mycology-core/dist/esm/profiles/boletus-edulis.js",
+    "packages/mycology-core/dist/esm/profiles/boletus-edulis.js.map",
+    "packages/mycology-core/dist/esm/scoring",
+    "packages/mycology-core/dist/esm/scoring/engine.js",
+    "packages/mycology-core/dist/esm/scoring/engine.js.map",
+    "packages/mycology-core/dist/esm/scoring/trigger.js",
+    "packages/mycology-core/dist/esm/scoring/trigger.js.map",
+    "packages/mycology-core/dist/esm/scoring/yield-model.js",
+    "packages/mycology-core/dist/esm/scoring/yield-model.js.map",
+    "packages/mycology-core/dist/esm/types.js",
+    "packages/mycology-core/dist/esm/types.js.map",
+    "packages/mycology-core/dist/esm/water",
+    "packages/mycology-core/dist/esm/water/balance.js",
+    "packages/mycology-core/dist/esm/water/balance.js.map",
+    "packages/mycology-core/dist/esm/water/eto.js",
+    "packages/mycology-core/dist/esm/water/eto.js.map"
+  ]
+}

@@ -1,0 +1,258 @@
+// Schema Prisma.
+//
+// Step 2: anagrafica stazioni + osservazioni giornaliere grezze.
+// Step 3: feature store, profili di specie versionati, punteggi di buttata.
+//
+// Gli id usano gen_random_uuid() lato Postgres e non uuid() lato client:
+// l'ingestione inserisce le osservazioni con un INSERT multi-riga in SQL
+// grezzo (ON CONFLICT DO UPDATE), che senza default sul database fallirebbe.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum IngestionStatus {
+  RUNNING
+  SUCCESS
+  /// Intervallo coperto solo in parte (tipicamente un rate limit): i dati
+  /// scaricati sono validi e persistiti, rilanciare riprende da dove si era
+  /// fermato.
+  PARTIAL
+  FAILED
+}
+
+/// Sorgenti dati registrate. Aggiungerne una richiede un adapter e una voce qui.
+enum WeatherSourceCode {
+  /// Arpae SIMC, Emilia-Romagna. Osservato, rete a terra.
+  ARPAE_ER
+  /// Open-Meteo. Modellato su griglia: copertura totale e previsione.
+  OPEN_METEO
+  /// AMAP Marche. Anagrafica aperta, misure su richiesta.
+  MARCHE_AMAP
+  /// SIR Toscana. Solo scraping.
+  SIR_TOSCANA
+}
+
+/// Traccia di ogni esecuzione di ingestione: quando qualcosa non torna,
+/// si vede subito quale sorgente, quale intervallo e quale errore.
+model IngestionRun {
+  id           String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  source       String          @db.VarChar(64)
+  rangeFrom    DateTime        @db.Date
+  rangeTo      DateTime        @db.Date
+  status       IngestionStatus @default(RUNNING)
+  rowsRead     Int             @default(0)
+  rowsWritten  Int             @default(0)
+  errorMessage String?
+  startedAt    DateTime        @default(now()) @db.Timestamptz(3)
+  finishedAt   DateTime?       @db.Timestamptz(3)
+  durationMs   Int?
+
+  @@index([source, startedAt(sort: Desc)])
+  @@index([status])
+  @@map("ingestion_run")
+}
+
+/// Punto di misura. Per una sorgente a griglia (Open-Meteo) e' la cella
+/// interrogata, non un impianto fisico: al modello la differenza non importa,
+/// conta che le coordinate siano stabili nel tempo.
+model Station {
+  id         String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  source     WeatherSourceCode
+  /// Identificativo stabile nella sorgente. Per Arpae: "rete:lon:lat".
+  externalId String            @db.VarChar(128)
+  name       String            @db.VarChar(160)
+  network    String?           @db.VarChar(64)
+
+  latitude  Float
+  longitude Float
+  altitudeM Float?
+
+  /// Derivati dalle coordinate con `stations:geocode`, non dalla sorgente:
+  /// Arpae non pubblica la provincia, e marca come Emilia-Romagna anche le
+  /// stazioni di confine che stanno in Liguria o Toscana.
+  region       String? @db.VarChar(64)
+  province     String? @db.VarChar(8)
+  provinceName String? @db.VarChar(64)
+  active       Boolean @default(true)
+
+  /// Primo e ultimo giorno per cui esiste almeno un'osservazione.
+  firstObservedOn DateTime? @db.Date
+  lastObservedOn  DateTime? @db.Date
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  observations DailyObservation[]
+  features     DailyStationFeature[]
+  predictions  FruitingPrediction[]
+
+  @@unique([source, externalId])
+  @@index([latitude, longitude])
+  @@index([altitudeM])
+  @@index([region, active])
+  @@map("station")
+}
+
+/// Osservazione giornaliera grezza, come arrivata da UNA sorgente.
+///
+/// Una stazione puo' avere piu' righe per lo stesso giorno, una per sorgente:
+/// Arpae per temperatura e pioggia, Open-Meteo per il suolo. Il merge per
+/// priorita' avviene a valle, quando si calcolano le feature (step 3), cosi'
+/// il grezzo resta sempre ricostruibile.
+///
+/// Convenzione: `date` e' la mezzanotte UTC del giorno locale Europe/Rome a
+/// cui i valori si riferiscono. Vale per tutte le sorgenti.
+///
+/// Invariante: qui non entrano mai dati futuri. Il sistema stabilisce se le
+/// condizioni ci sono ADESSO guardando la pioggia caduta e le temperature che
+/// l'hanno seguita, non prevedendo il meteo dei prossimi giorni.
+model DailyObservation {
+  id        String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  stationId String            @db.Uuid
+  station   Station           @relation(fields: [stationId], references: [id], onDelete: Cascade)
+  date      DateTime          @db.Date
+  source    WeatherSourceCode
+
+  tMeanC    Float?
+  tMinC     Float?
+  tMaxC     Float?
+  precipMm  Float?
+  rhMeanPct Float?
+
+  /// Temperatura del suolo. Nessuna rete Arpae la misura: viene da Open-Meteo,
+  /// tranne che nelle Marche dove esistono sensori reali a 5/10/20/30/50 cm.
+  soilT0To7C  Float?
+  soilT7To28C Float?
+  /// Umidita' volumetrica del suolo, m3/m3.
+  soilMoisture0To7 Float?
+
+  /// Numero di misure sotto-giornaliere che hanno prodotto l'aggregato.
+  /// Nullo per le sorgenti che pubblicano gia' il giornaliero.
+  sampleCount Int?
+
+  ingestedAt DateTime @default(now()) @db.Timestamptz(3)
+
+  @@unique([stationId, date, source])
+  @@index([date])
+  @@index([stationId, date])
+  @@index([source, date])
+  @@map("daily_observation")
+}
+
+/// Feature giornaliere calcolate, pronte per il motore di scoring.
+///
+/// Le feature stanno in JSONB e non in una colonna ciascuna: l'insieme cambia
+/// mentre il modello si affina, e ogni aggiunta richiederebbe una migrazione.
+/// Nessuna query filtra per singola feature - il motore legge righe intere -
+/// quindi la rigidita' relazionale non pagherebbe nulla.
+model DailyStationFeature {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  stationId String   @db.Uuid
+  station   Station  @relation(fields: [stationId], references: [id], onDelete: Cascade)
+  date      DateTime @db.Date
+
+  /// Serializzazione di DailyFeatures (@mushrooms/mycology-core).
+  features Json
+
+  /// True finche' il bilancio idrico non ha dimenticato la condizione iniziale:
+  /// i primi ~60 giorni di ogni serie non sono affidabili.
+  warmup Boolean @default(false)
+
+  computedAt DateTime @default(now()) @db.Timestamptz(3)
+
+  @@unique([stationId, date])
+  @@index([date])
+  @@map("daily_station_feature")
+}
+
+/// Profilo di specie versionato.
+///
+/// E' il file che si modifica per tarare il modello. Vive a database e non solo
+/// su disco perche' ogni punteggio registra con quale versione e' stato
+/// prodotto: due tarature diverse possono convivere e vanno confrontate a
+/// parita' di dati.
+model SpeciesModel {
+  id      String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  species String  @db.VarChar(64)
+  version Int
+  label   String  @db.VarChar(160)
+
+  /// Serializzazione di SpeciesProfile (@mushrooms/mycology-core).
+  profile Json
+
+  /// Solo una versione per specie e' attiva alla volta.
+  active Boolean @default(false)
+
+  /// Da dove arriva: "builtin" o il percorso del file YAML caricato.
+  source String? @db.VarChar(255)
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  predictions FruitingPrediction[]
+
+  @@unique([species, version])
+  @@index([species, active])
+  @@map("species_model")
+}
+
+/// Punteggio di buttata per una stazione in un giorno.
+///
+/// Persistito e non calcolato al volo perche' la domanda che l'applicazione
+/// deve saper rispondere in fretta e' "dove sono le condizioni migliori oggi",
+/// cioe' un ordinamento su tutte le stazioni.
+model FruitingPrediction {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  stationId String   @db.Uuid
+  station   Station  @relation(fields: [stationId], references: [id], onDelete: Cascade)
+  date      DateTime @db.Date
+
+  modelId String       @db.Uuid
+  model   SpeciesModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  /// 0-100.
+  score Float
+  class String @db.VarChar(16)
+
+  triggerScore      Float
+  phenologyScore    Float
+  daysSinceWetEvent Int?
+  warmup            Boolean @default(false)
+
+  /// Contributo di ogni regola e inibitori attivi: rende il punteggio
+  /// ispezionabile invece che un numero calato dall'alto.
+  detail Json
+
+  computedAt DateTime @default(now()) @db.Timestamptz(3)
+
+  @@unique([stationId, date, modelId])
+  @@index([date, score(sort: Desc)])
+  @@index([modelId, date])
+  @@map("fruiting_prediction")
+}
+
+/// Confini provinciali italiani, per attribuire provincia e regione a una
+/// stazione dalle sue coordinate.
+///
+/// La geometria e' `Unsupported`: Prisma sa crearla in migrazione ma non
+/// leggerla, e va bene cosi' - l'unica query che la tocca e' un ST_Contains
+/// in SQL grezzo. Fonte: openpolis/geojson-italy (ISTAT).
+model ProvinceBoundary {
+  id        String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// Sigla automobilistica: PR, MO, BO...
+  acronym   String @unique @db.VarChar(8)
+  name      String @db.VarChar(64)
+  region    String @db.VarChar(64)
+  istatCode String @db.VarChar(8)
+
+  geom Unsupported("geometry(MultiPolygon, 4326)")
+
+  importedAt DateTime @default(now()) @db.Timestamptz(3)
+
+  @@map("province_boundary")
+}

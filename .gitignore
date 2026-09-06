@@ -1,0 +1,24 @@
+node_modules/
+dist/
+.output/
+.nuxt/
+coverage/
+*.tsbuildinfo
+
+.env
+.env.*
+!.env.example
+
+.DS_Store
+*.log
+.vscode/
+.idea/
+
+# artefatti di ingestione scaricati (file mensili Arpae, cache)
+/tmp-data/
+apps/api/.cache/
+
+# Prisma 7 genera il client come sorgenti TypeScript: e' un artefatto di build.
+apps/api/src/generated/
+# Output di graphql-codegen
+packages/graphql-schema/src/generated/

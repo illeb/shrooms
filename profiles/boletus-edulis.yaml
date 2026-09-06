@@ -1,0 +1,124 @@
+# Profilo di specie: Porcino (gruppo edulis)
+#
+# Modificare i numeri qui dentro e ricaricare con:
+#   pnpm --filter @mushrooms/api cli model:load --file=../../profiles/boletus-edulis.yaml
+#
+# Ogni caricamento crea una NUOVA versione: le precedenti restano,
+# e i punteggi gia calcolati continuano a riferirsi alla loro.
+#
+# La provenienza di ogni valore e documentata nel profilo integrato:
+#   packages/mycology-core/src/profiles/boletus-edulis.ts
+label: Porcino (gruppo edulis)
+rules:
+  - id: air-temperature
+    weight: 1
+    feature: tMean5
+    membership:
+      a: 4
+      b: 10
+      c: 16
+      d: 21
+      type: trapezoid
+  - id: soil-temperature
+    weight: 0.5
+    feature: soilTMean7
+    onMissing: skip
+    membership:
+      a: 4
+      b: 9
+      c: 17
+      d: 23
+      type: trapezoid
+  - id: soil-water
+    weight: 1
+    feature: swi
+    membership:
+      a: 0.3
+      b: 0.5
+      c: 0.95
+      d: 1.01
+      type: trapezoid
+  - id: cumulated-rain
+    weight: 0.7
+    feature: p21
+    membership:
+      ref: 90
+      type: saturating
+  - id: thermal-shock
+    mode: bonus
+    weight: 0.4
+    feature: thermalShock
+    onMissing: skip
+    membership:
+      a: 0
+      b: 2
+      c: 8
+      d: 14
+      type: trapezoid
+water:
+  kc: 0.85
+  awcMm: 120
+species: boletus-edulis
+trigger:
+  minSwi: 0.45
+  windowDays: 5
+  minPrecipMm: 20
+  magnitudeRefMm: 60
+version: 2
+phenology:
+  altitudeBands:
+    - toM: 2000
+      doyTo: 293
+      fromM: 1000
+      doyFrom: 152
+    - toM: 999
+      doyTo: 319
+      fromM: 500
+      doyFrom: 196
+    - toM: 499
+      doyTo: 350
+      fromM: 0
+      doyFrom: 244
+incubation:
+  maxDays: 28
+  minDays: 8
+  optDaysTo: 18
+  optDaysFrom: 12
+inhibitors:
+  - id: heat-drought
+    when:
+      all:
+        - op: gt
+          value: 17.5
+          feature: tMean5
+        - op: lt
+          value: 5
+          feature: p5
+    factor: 0
+  - id: frost
+    when:
+      op: gte
+      value: 1
+      feature: frostDays
+    factor: 0
+    persistDays: 5
+  - id: drought
+    when:
+      op: gt
+      value: 12
+      feature: droughtStreak
+    factor: 0.25
+yieldModel:
+  enabled: true
+  basalArea: 40
+  coefficients:
+    g: -0.121
+    lnG: 5.049
+    pAutumn: 0.007
+    tAutumn: 0.129
+    intercept: -14.706
+classThresholds:
+  buona: 60
+  scarsa: 15
+  discreta: 35
+  eccezionale: 80

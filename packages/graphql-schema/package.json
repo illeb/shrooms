@@ -1,0 +1,34 @@
+{
+  "name": "@mushrooms/graphql-schema",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Artefatto SDL condiviso fra API (code-first) e frontend (codegen).",
+  "license": "UNLICENSED",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./schema.graphql": "./schema.graphql"
+  },
+  "files": [
+    "dist",
+    "schema.graphql"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "codegen": "graphql-codegen --config codegen.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rm -rf dist src/generated *.tsbuildinfo"
+  },
+  "devDependencies": {
+    "@graphql-codegen/cli": "^7.4.0",
+    "@graphql-codegen/client-preset": "^6.1.3",
+    "@graphql-typed-document-node/core": "^3.2.0",
+    "@types/node": "^26.4.1",
+    "graphql": "^16.11.0",
+    "typescript": "^6.0.3"
+  }
+}

@@ -1,0 +1,23 @@
+@import 'tailwindcss';
+@import '@nuxt/ui';
+
+/*
+ * Palette del progetto: terra e bosco, non il blu di default.
+ *
+ * Le tinte vanno definite qui come scala completa e poi nominate in
+ * app.config.ts: Nuxt UI risolve `primary` attraverso i propri alias, quindi
+ * ridefinire `--color-primary-*` da solo non basta.
+ */
+@theme static {
+  --color-porcini-50: oklch(0.97 0.02 75);
+  --color-porcini-100: oklch(0.94 0.04 75);
+  --color-porcini-200: oklch(0.88 0.07 72);
+  --color-porcini-300: oklch(0.8 0.1 68);
+  --color-porcini-400: oklch(0.71 0.12 62);
+  --color-porcini-500: oklch(0.62 0.13 55);
+  --color-porcini-600: oklch(0.53 0.12 48);
+  --color-porcini-700: oklch(0.44 0.1 44);
+  --color-porcini-800: oklch(0.36 0.08 42);
+  --color-porcini-900: oklch(0.29 0.06 42);
+  --color-porcini-950: oklch(0.19 0.04 42);
+}

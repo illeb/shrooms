@@ -1,0 +1,13 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+
+# pnpm 10 blocca di default gli script di post-install: qui elenchiamo
+# solo i pacchetti a cui serve davvero compilare qualcosa.
+onlyBuiltDependencies:
+  - '@parcel/watcher'
+  - '@prisma/client'
+  - '@prisma/engines'
+  - 'esbuild'
+  - 'prisma'
+  - 'unrs-resolver'

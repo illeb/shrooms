@@ -1,0 +1,628 @@
+{
+  "files": {
+    "apps/api/dist/src/ingestion/adapters/open-meteo/open-meteo.adapter.js": {
+      "size": 14038,
+      "mtime_nanos": 1788695124444593423,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src": { "size": 0, "mtime_nanos": 0, "mode": 0, "is_dir": true },
+    "apps/api/dist/src/generated/prisma/models/DailyObservation.js.map": {
+      "size": 160,
+      "mtime_nanos": 1788695124341474677,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/generated/prisma/client.js.map": {
+      "size": 366,
+      "mtime_nanos": 1788695124364372584,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/config/env.js": {
+      "size": 1951,
+      "mtime_nanos": 1788695124332012799,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/generated/prisma/models.js": {
+      "size": 111,
+      "mtime_nanos": 1788695124348774647,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/ingestion/adapters/arpae": {
+      "size": 0,
+      "mtime_nanos": 0,
+      "mode": 0,
+      "is_dir": true
+    },
+    "apps/api/dist/src/generated/prisma/client.js": {
+      "size": 2888,
+      "mtime_nanos": 1788695124364455500,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/generated/prisma/enums.js": {
+      "size": 706,
+      "mtime_nanos": 1788695124333366002,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/ingestion/adapters/arpae/arpae-bufr.js": {
+      "size": 5326,
+      "mtime_nanos": 1788695124405359166,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/generated/prisma/models/DailyStationFeature.js": {
+      "size": 124,
+      "mtime_nanos": 1788695124343065296,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/ingestion/ingestion.service.js": {
+      "size": 14168,
+      "mtime_nanos": 1788695124473723387,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/app.module.js.map": {
+      "size": 1080,
+      "mtime_nanos": 1788695124690989041,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/health": { "size": 0, "mtime_nanos": 0, "mode": 0, "is_dir": true },
+    "apps/api/dist/src/generated": { "size": 0, "mtime_nanos": 0, "mode": 0, "is_dir": true },
+    "apps/api/dist/src/ingestion/ingestion.module.js": {
+      "size": 1559,
+      "mtime_nanos": 1788695124475739879,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/cli/main.cli.js": {
+      "size": 21701,
+      "mtime_nanos": 1788695124723465034,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/config": { "size": 0, "mtime_nanos": 0, "mode": 0, "is_dir": true },
+    "apps/api/dist/src/generated/prisma/models/IngestionRun.js": {
+      "size": 117,
+      "mtime_nanos": 1788695124336596072,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist": { "size": 0, "mtime_nanos": 0, "mode": 0, "is_dir": true },
+    "apps/api/dist/src/generated/prisma/models/Station.js": {
+      "size": 112,
+      "mtime_nanos": 1788695124339417810,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/generated/prisma/models.js.map": {
+      "size": 130,
+      "mtime_nanos": 1788695124348668856,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/ingestion/adapters/arpae/arpae-aggregator.js": {
+      "size": 6307,
+      "mtime_nanos": 1788695124415697582,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/generated/prisma": {
+      "size": 0,
+      "mtime_nanos": 0,
+      "mode": 0,
+      "is_dir": true
+    },
+    "apps/api/dist/src/meta/meta.module.js": {
+      "size": 1020,
+      "mtime_nanos": 1788695124685688104,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/prisma": { "size": 0, "mtime_nanos": 0, "mode": 0, "is_dir": true },
+    "apps/api/dist/src/ingestion": { "size": 0, "mtime_nanos": 0, "mode": 0, "is_dir": true },
+    "apps/api/dist/src/meta/meta.model.js": {
+      "size": 1900,
+      "mtime_nanos": 1788695124682964741,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/mycology/mycology.module.js": {
+      "size": 1591,
+      "mtime_nanos": 1788695124681244039,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/mycology/species-model.service.js": {
+      "size": 7432,
+      "mtime_nanos": 1788695124632926278,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/meta/meta.resolver.js": {
+      "size": 2395,
+      "mtime_nanos": 1788695124685003816,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/prisma/prisma.service.js": {
+      "size": 2476,
+      "mtime_nanos": 1788695124388272111,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/generated/prisma/commonInputTypes.js.map": {
+      "size": 212,
+      "mtime_nanos": 1788695124348100733,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/cli": { "size": 0, "mtime_nanos": 0, "mode": 0, "is_dir": true },
+    "apps/api/dist/src/generated/prisma/models/SpeciesModel.js.map": {
+      "size": 152,
+      "mtime_nanos": 1788695124344515040,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/generated/prisma/browser.js": {
+      "size": 2459,
+      "mtime_nanos": 1788695124725828857,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/mycology/species-model.service.js.map": {
+      "size": 4349,
+      "mtime_nanos": 1788695124632721238,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/generated/prisma/models/Station.js.map": {
+      "size": 142,
+      "mtime_nanos": 1788695124339329561,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/config/env.js.map": {
+      "size": 1702,
+      "mtime_nanos": 1788695124331885883,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/ingestion/adapters": {
+      "size": 0,
+      "mtime_nanos": 0,
+      "mode": 0,
+      "is_dir": true
+    },
+    "apps/api/dist/src/ingestion/adapters/open-meteo/open-meteo.adapter.js.map": {
+      "size": 9941,
+      "mtime_nanos": 1788695124444328965,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/meta": { "size": 0, "mtime_nanos": 0, "mode": 0, "is_dir": true },
+    "apps/api/dist/src/mycology/mycology.service.js.map": {
+      "size": 9196,
+      "mtime_nanos": 1788695124653978276,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/mycology/species-profile.schema.js": {
+      "size": 5242,
+      "mtime_nanos": 1788695124616220180,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/generated/prisma/commonInputTypes.js": {
+      "size": 437,
+      "mtime_nanos": 1788695124348204983,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/ingestion/adapters/weather-source.adapter.js.map": {
+      "size": 164,
+      "mtime_nanos": 1788695124394128254,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/generated/prisma/models": {
+      "size": 0,
+      "mtime_nanos": 0,
+      "mode": 0,
+      "is_dir": true
+    },
+    "apps/api/dist/src/mycology/graphql/prediction.model.js.map": {
+      "size": 2478,
+      "mtime_nanos": 1788695124666778390,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/generated/prisma/internal/prismaNamespaceBrowser.js.map": {
+      "size": 2921,
+      "mtime_nanos": 1788695124724735570,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/ingestion/adapters/arpae/arpae-bufr.js.map": {
+      "size": 3898,
+      "mtime_nanos": 1788695124405173750,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/generated/prisma/models/DailyStationFeature.js.map": {
+      "size": 166,
+      "mtime_nanos": 1788695124342999421,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/health/health.controller.js": {
+      "size": 2800,
+      "mtime_nanos": 1788695124391987554,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/health/health.module.js": {
+      "size": 1056,
+      "mtime_nanos": 1788695124393162883,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/generated/prisma/models/FruitingPrediction.js": {
+      "size": 123,
+      "mtime_nanos": 1788695124346699822,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/meta/meta.model.js.map": {
+      "size": 717,
+      "mtime_nanos": 1788695124682811366,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/generated/prisma/internal/prismaNamespace.js.map": {
+      "size": 3567,
+      "mtime_nanos": 1788695124355420745,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/mycology/graphql/prediction.input.js.map": {
+      "size": 1484,
+      "mtime_nanos": 1788695124661964993,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/generated/prisma/internal/prismaNamespaceBrowser.js": {
+      "size": 6530,
+      "mtime_nanos": 1788695124724904236,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/meta/meta.resolver.js.map": {
+      "size": 770,
+      "mtime_nanos": 1788695124684914983,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/mycology/graphql/prediction.resolver.js": {
+      "size": 6838,
+      "mtime_nanos": 1788695124680342418,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/app.module.js": {
+      "size": 2851,
+      "mtime_nanos": 1788695124691099999,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/ingestion/adapters/arpae/arpae.adapter.js": {
+      "size": 6686,
+      "mtime_nanos": 1788695124428651863,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/mycology/mycology.service.js": {
+      "size": 12369,
+      "mtime_nanos": 1788695124654289024,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/prisma/prisma.service.js.map": {
+      "size": 907,
+      "mtime_nanos": 1788695124388171736,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/mycology/mycology.module.js.map": {
+      "size": 421,
+      "mtime_nanos": 1788695124681155415,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/generated/prisma/models/SpeciesModel.js": {
+      "size": 117,
+      "mtime_nanos": 1788695124344618456,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/cli/main.cli.js.map": {
+      "size": 18439,
+      "mtime_nanos": 1788695124723263076,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/mycology/graphql": {
+      "size": 0,
+      "mtime_nanos": 0,
+      "mode": 0,
+      "is_dir": true
+    },
+    "apps/api/dist/src/generated/prisma/enums.js.map": {
+      "size": 423,
+      "mtime_nanos": 1788695124333291835,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/mycology/species-profile.schema.js.map": {
+      "size": 5854,
+      "mtime_nanos": 1788695124615980639,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/ingestion/ingestion.service.js.map": {
+      "size": 9349,
+      "mtime_nanos": 1788695124473443846,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/main.js": {
+      "size": 960,
+      "mtime_nanos": 1788695124694313694,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/mycology/graphql/prediction.resolver.js.map": {
+      "size": 4448,
+      "mtime_nanos": 1788695124680179835,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/ingestion/ingestion.module.js.map": {
+      "size": 413,
+      "mtime_nanos": 1788695124475631379,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/meta/meta.module.js.map": {
+      "size": 300,
+      "mtime_nanos": 1788695124685590063,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/health/health.module.js.map": {
+      "size": 307,
+      "mtime_nanos": 1788695124393087174,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/generated/prisma/internal": {
+      "size": 0,
+      "mtime_nanos": 0,
+      "mode": 0,
+      "is_dir": true
+    },
+    "apps/api/dist/src/main.js.map": {
+      "size": 873,
+      "mtime_nanos": 1788695124694224195,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/ingestion/adapters/open-meteo": {
+      "size": 0,
+      "mtime_nanos": 0,
+      "mode": 0,
+      "is_dir": true
+    },
+    "apps/api/dist/src/prisma/prisma.module.js.map": {
+      "size": 358,
+      "mtime_nanos": 1788695124686302602,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/generated/prisma/models/IngestionRun.js.map": {
+      "size": 152,
+      "mtime_nanos": 1788695124336510114,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/mycology": { "size": 0, "mtime_nanos": 0, "mode": 0, "is_dir": true },
+    "apps/api/.turbo/turbo-build.log": {
+      "size": 394,
+      "mtime_nanos": 1788695124758889222,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/generated/prisma/models/DailyObservation.js": {
+      "size": 121,
+      "mtime_nanos": 1788695124341551760,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/generated/prisma/internal/class.js.map": {
+      "size": 1287,
+      "mtime_nanos": 1788695124361440637,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/generated/prisma/models/FruitingPrediction.js.map": {
+      "size": 164,
+      "mtime_nanos": 1788695124346632989,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/mycology/graphql/prediction.input.js": {
+      "size": 3535,
+      "mtime_nanos": 1788695124662090784,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/mycology/graphql/prediction.model.js": {
+      "size": 5853,
+      "mtime_nanos": 1788695124666929223,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/prisma/prisma.module.js": {
+      "size": 1134,
+      "mtime_nanos": 1788695124686376643,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/generated/prisma/internal/prismaNamespace.js": {
+      "size": 7841,
+      "mtime_nanos": 1788695124355778369,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/generated/prisma/browser.js.map": {
+      "size": 285,
+      "mtime_nanos": 1788695124725745233,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/ingestion/adapters/weather-source.adapter.js": {
+      "size": 127,
+      "mtime_nanos": 1788695124394230462,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/generated/prisma/internal/class.js": {
+      "size": 44490,
+      "mtime_nanos": 1788695124361597553,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/health/health.controller.js.map": {
+      "size": 1042,
+      "mtime_nanos": 1788695124391905054,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/ingestion/adapters/arpae/arpae-aggregator.js.map": {
+      "size": 5096,
+      "mtime_nanos": 1788695124415534875,
+      "mode": 420,
+      "is_dir": false
+    },
+    "apps/api/dist/src/ingestion/adapters/arpae/arpae.adapter.js.map": {
+      "size": 4272,
+      "mtime_nanos": 1788695124428426530,
+      "mode": 420,
+      "is_dir": false
+    }
+  },
+  "order": [
+    "apps/api/.turbo/turbo-build.log",
+    "apps/api/dist",
+    "apps/api/dist/src",
+    "apps/api/dist/src/app.module.js",
+    "apps/api/dist/src/app.module.js.map",
+    "apps/api/dist/src/cli",
+    "apps/api/dist/src/cli/main.cli.js",
+    "apps/api/dist/src/cli/main.cli.js.map",
+    "apps/api/dist/src/config",
+    "apps/api/dist/src/config/env.js",
+    "apps/api/dist/src/config/env.js.map",
+    "apps/api/dist/src/generated",
+    "apps/api/dist/src/generated/prisma",
+    "apps/api/dist/src/generated/prisma/browser.js",
+    "apps/api/dist/src/generated/prisma/browser.js.map",
+    "apps/api/dist/src/generated/prisma/client.js",
+    "apps/api/dist/src/generated/prisma/client.js.map",
+    "apps/api/dist/src/generated/prisma/commonInputTypes.js",
+    "apps/api/dist/src/generated/prisma/commonInputTypes.js.map",
+    "apps/api/dist/src/generated/prisma/enums.js",
+    "apps/api/dist/src/generated/prisma/enums.js.map",
+    "apps/api/dist/src/generated/prisma/internal",
+    "apps/api/dist/src/generated/prisma/internal/class.js",
+    "apps/api/dist/src/generated/prisma/internal/class.js.map",
+    "apps/api/dist/src/generated/prisma/internal/prismaNamespace.js",
+    "apps/api/dist/src/generated/prisma/internal/prismaNamespace.js.map",
+    "apps/api/dist/src/generated/prisma/internal/prismaNamespaceBrowser.js",
+    "apps/api/dist/src/generated/prisma/internal/prismaNamespaceBrowser.js.map",
+    "apps/api/dist/src/generated/prisma/models",
+    "apps/api/dist/src/generated/prisma/models/DailyObservation.js",
+    "apps/api/dist/src/generated/prisma/models/DailyObservation.js.map",
+    "apps/api/dist/src/generated/prisma/models/DailyStationFeature.js",
+    "apps/api/dist/src/generated/prisma/models/DailyStationFeature.js.map",
+    "apps/api/dist/src/generated/prisma/models/FruitingPrediction.js",
+    "apps/api/dist/src/generated/prisma/models/FruitingPrediction.js.map",
+    "apps/api/dist/src/generated/prisma/models/IngestionRun.js",
+    "apps/api/dist/src/generated/prisma/models/IngestionRun.js.map",
+    "apps/api/dist/src/generated/prisma/models/SpeciesModel.js",
+    "apps/api/dist/src/generated/prisma/models/SpeciesModel.js.map",
+    "apps/api/dist/src/generated/prisma/models/Station.js",
+    "apps/api/dist/src/generated/prisma/models/Station.js.map",
+    "apps/api/dist/src/generated/prisma/models.js",
+    "apps/api/dist/src/generated/prisma/models.js.map",
+    "apps/api/dist/src/health",
+    "apps/api/dist/src/health/health.controller.js",
+    "apps/api/dist/src/health/health.controller.js.map",
+    "apps/api/dist/src/health/health.module.js",
+    "apps/api/dist/src/health/health.module.js.map",
+    "apps/api/dist/src/ingestion",
+    "apps/api/dist/src/ingestion/adapters",
+    "apps/api/dist/src/ingestion/adapters/arpae",
+    "apps/api/dist/src/ingestion/adapters/arpae/arpae-aggregator.js",
+    "apps/api/dist/src/ingestion/adapters/arpae/arpae-aggregator.js.map",
+    "apps/api/dist/src/ingestion/adapters/arpae/arpae-bufr.js",
+    "apps/api/dist/src/ingestion/adapters/arpae/arpae-bufr.js.map",
+    "apps/api/dist/src/ingestion/adapters/arpae/arpae.adapter.js",
+    "apps/api/dist/src/ingestion/adapters/arpae/arpae.adapter.js.map",
+    "apps/api/dist/src/ingestion/adapters/open-meteo",
+    "apps/api/dist/src/ingestion/adapters/open-meteo/open-meteo.adapter.js",
+    "apps/api/dist/src/ingestion/adapters/open-meteo/open-meteo.adapter.js.map",
+    "apps/api/dist/src/ingestion/adapters/weather-source.adapter.js",
+    "apps/api/dist/src/ingestion/adapters/weather-source.adapter.js.map",
+    "apps/api/dist/src/ingestion/ingestion.module.js",
+    "apps/api/dist/src/ingestion/ingestion.module.js.map",
+    "apps/api/dist/src/ingestion/ingestion.service.js",
+    "apps/api/dist/src/ingestion/ingestion.service.js.map",
+    "apps/api/dist/src/main.js",
+    "apps/api/dist/src/main.js.map",
+    "apps/api/dist/src/meta",
+    "apps/api/dist/src/meta/meta.model.js",
+    "apps/api/dist/src/meta/meta.model.js.map",
+    "apps/api/dist/src/meta/meta.module.js",
+    "apps/api/dist/src/meta/meta.module.js.map",
+    "apps/api/dist/src/meta/meta.resolver.js",
+    "apps/api/dist/src/meta/meta.resolver.js.map",
+    "apps/api/dist/src/mycology",
+    "apps/api/dist/src/mycology/graphql",
+    "apps/api/dist/src/mycology/graphql/prediction.input.js",
+    "apps/api/dist/src/mycology/graphql/prediction.input.js.map",
+    "apps/api/dist/src/mycology/graphql/prediction.model.js",
+    "apps/api/dist/src/mycology/graphql/prediction.model.js.map",
+    "apps/api/dist/src/mycology/graphql/prediction.resolver.js",
+    "apps/api/dist/src/mycology/graphql/prediction.resolver.js.map",
+    "apps/api/dist/src/mycology/mycology.module.js",
+    "apps/api/dist/src/mycology/mycology.module.js.map",
+    "apps/api/dist/src/mycology/mycology.service.js",
+    "apps/api/dist/src/mycology/mycology.service.js.map",
+    "apps/api/dist/src/mycology/species-model.service.js",
+    "apps/api/dist/src/mycology/species-model.service.js.map",
+    "apps/api/dist/src/mycology/species-profile.schema.js",
+    "apps/api/dist/src/mycology/species-profile.schema.js.map",
+    "apps/api/dist/src/prisma",
+    "apps/api/dist/src/prisma/prisma.module.js",
+    "apps/api/dist/src/prisma/prisma.module.js.map",
+    "apps/api/dist/src/prisma/prisma.service.js",
+    "apps/api/dist/src/prisma/prisma.service.js.map"
+  ]
+}

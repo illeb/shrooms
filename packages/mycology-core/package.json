@@ -1,0 +1,33 @@
+{
+  "name": "@mushrooms/mycology-core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Motore di previsione micologica: puro TypeScript, nessuna dipendenza da NestJS o dal database.",
+  "license": "UNLICENSED",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/cjs/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/cjs/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.cjs.json && tsc -p tsconfig.esm.json && node scripts/fixup-dual-build.mjs",
+    "dev": "tsc -p tsconfig.cjs.json --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -p tsconfig.cjs.json --noEmit",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "devDependencies": {
+    "@types/node": "^26.4.1",
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.0"
+  }
+}

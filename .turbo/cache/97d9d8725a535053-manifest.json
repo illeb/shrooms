@@ -1,0 +1,162 @@
+{
+  "files": {
+    "packages/graphql-schema/dist/generated/fragment-masking.js.map": {
+      "size": 780,
+      "mtime_nanos": 1788695122627455678,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/graphql-schema/dist/generated/graphql.js.map": {
+      "size": 874,
+      "mtime_nanos": 1788695122622918780,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/graphql-schema/dist/generated/index.js": {
+      "size": 885,
+      "mtime_nanos": 1788695122631680244,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/graphql-schema/dist/index.d.ts.map": {
+      "size": 184,
+      "mtime_nanos": 1788695122621571660,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/graphql-schema/dist/generated/index.d.ts.map": {
+      "size": 159,
+      "mtime_nanos": 1788695122631837827,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/graphql-schema/dist/generated/fragment-masking.d.ts": {
+      "size": 2511,
+      "mtime_nanos": 1788695122629327087,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/graphql-schema/dist/generated/graphql.d.ts": {
+      "size": 752,
+      "mtime_nanos": 1788695122625711352,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/graphql-schema/dist/generated/fragment-masking.js": {
+      "size": 800,
+      "mtime_nanos": 1788695122627537678,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/graphql-schema/dist/generated/graphql.js": {
+      "size": 787,
+      "mtime_nanos": 1788695122623037946,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/graphql-schema/dist/index.js.map": {
+      "size": 240,
+      "mtime_nanos": 1788695122619311586,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/graphql-schema/dist/generated/graphql.d.ts.map": {
+      "size": 823,
+      "mtime_nanos": 1788695122625620811,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/graphql-schema/.turbo/turbo-build.log": {
+      "size": 146,
+      "mtime_nanos": 1788695122642491242,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/graphql-schema/dist/generated": {
+      "size": 0,
+      "mtime_nanos": 0,
+      "mode": 0,
+      "is_dir": true
+    },
+    "packages/graphql-schema/dist/generated/gql.js": {
+      "size": 1796,
+      "mtime_nanos": 1788695122630219000,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/graphql-schema/dist": { "size": 0, "mtime_nanos": 0, "mode": 0, "is_dir": true },
+    "packages/graphql-schema/dist/generated/gql.js.map": {
+      "size": 334,
+      "mtime_nanos": 1788695122630146584,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/graphql-schema/dist/generated/index.d.ts": {
+      "size": 94,
+      "mtime_nanos": 1788695122631890702,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/graphql-schema/dist/generated/index.js.map": {
+      "size": 155,
+      "mtime_nanos": 1788695122631610078,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/graphql-schema/dist/index.d.ts": {
+      "size": 422,
+      "mtime_nanos": 1788695122621650994,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/graphql-schema/dist/generated/gql.d.ts.map": {
+      "size": 647,
+      "mtime_nanos": 1788695122631056580,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/graphql-schema/dist/index.js": {
+      "size": 629,
+      "mtime_nanos": 1788695122619412253,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/graphql-schema/dist/generated/fragment-masking.d.ts.map": {
+      "size": 2545,
+      "mtime_nanos": 1788695122629229088,
+      "mode": 420,
+      "is_dir": false
+    },
+    "packages/graphql-schema/dist/generated/gql.d.ts": {
+      "size": 1878,
+      "mtime_nanos": 1788695122631157330,
+      "mode": 420,
+      "is_dir": false
+    }
+  },
+  "order": [
+    "packages/graphql-schema/.turbo/turbo-build.log",
+    "packages/graphql-schema/dist",
+    "packages/graphql-schema/dist/generated",
+    "packages/graphql-schema/dist/generated/fragment-masking.d.ts",
+    "packages/graphql-schema/dist/generated/fragment-masking.d.ts.map",
+    "packages/graphql-schema/dist/generated/fragment-masking.js",
+    "packages/graphql-schema/dist/generated/fragment-masking.js.map",
+    "packages/graphql-schema/dist/generated/gql.d.ts",
+    "packages/graphql-schema/dist/generated/gql.d.ts.map",
+    "packages/graphql-schema/dist/generated/gql.js",
+    "packages/graphql-schema/dist/generated/gql.js.map",
+    "packages/graphql-schema/dist/generated/graphql.d.ts",
+    "packages/graphql-schema/dist/generated/graphql.d.ts.map",
+    "packages/graphql-schema/dist/generated/graphql.js",
+    "packages/graphql-schema/dist/generated/graphql.js.map",
+    "packages/graphql-schema/dist/generated/index.d.ts",
+    "packages/graphql-schema/dist/generated/index.d.ts.map",
+    "packages/graphql-schema/dist/generated/index.js",
+    "packages/graphql-schema/dist/generated/index.js.map",
+    "packages/graphql-schema/dist/index.d.ts",
+    "packages/graphql-schema/dist/index.d.ts.map",
+    "packages/graphql-schema/dist/index.js",
+    "packages/graphql-schema/dist/index.js.map"
+  ]
+}

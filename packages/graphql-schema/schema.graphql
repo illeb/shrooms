@@ -1,0 +1,121 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+"""Informazioni di servizio sull'istanza API."""
+type ApiInfo {
+  """Ambiente di esecuzione."""
+  environment: String!
+
+  """Nome del servizio."""
+  name: String!
+
+  """Ora del server (UTC)."""
+  serverTime: DateTime!
+
+  """Versione del pacchetto."""
+  version: String!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+"""
+Condizioni di fruttificazione per una stazione in un giorno. Valuta il passato: non e una previsione meteo.
+"""
+type FruitingPredictionType {
+  """nulla | scarsa | discreta | buona | eccezionale"""
+  class: String!
+
+  """
+  Giorno valutato, YYYY-MM-DD. Stringa e non data: e un giorno locale italiano, e passarlo come istante lo esporrebbe a slittamenti di fuso.
+  """
+  date: String!
+
+  """Giorni dall'evento di pioggia."""
+  daysSinceWetEvent: Int
+  id: ID!
+
+  """Stagione e quota compatibili: 1 o 0."""
+  phenologyScore: Float!
+
+  """Pioggia degli ultimi 21 giorni, mm."""
+  precip21dMm: Float
+
+  """Punteggio 0-100."""
+  score: Float!
+
+  """
+  Acqua trattenuta dal suolo, mm. E' il contenuto del serbatoio del bilancio idrico: la pioggia che e ancora li, non quella caduta.
+  """
+  soilWaterMm: Float
+  station: StationType!
+
+  """Riempimento del suolo, 0-1: soilWaterMm sulla riserva utile."""
+  swi: Float
+
+  """Quanto il giorno e dentro una finestra di incubazione."""
+  triggerScore: Float!
+
+  """Il bilancio idrico non ha ancora dimenticato la condizione iniziale."""
+  warmup: Boolean!
+}
+
+"""Filtri per la lista delle condizioni."""
+input PredictionsInput {
+  """Giorno YYYY-MM-DD. Omesso: l'ultimo calcolato."""
+  date: String
+  limit: Int = 200
+  maxAltitudeM: Float
+  minAltitudeM: Float
+  minScore: Float = 0
+  species: String = "boletus-edulis"
+}
+
+type Query {
+  """
+  Profilo attivo: dice con quale taratura sono stati prodotti i punteggi.
+  """
+  activeSpeciesModel(species: String = "boletus-edulis"): SpeciesModelType
+
+  """Informazioni di servizio sull'API."""
+  apiInfo: ApiInfo!
+
+  """
+  Specie per cui esiste un profilo attivo. La select del frontend si popola da qui: aggiungere una specie non richiede toccarlo.
+  """
+  availableSpecies: [SpeciesModelType!]!
+
+  """Ultimo giorno per cui esistono punteggi, YYYY-MM-DD."""
+  latestPredictionDate(species: String = "boletus-edulis"): String
+
+  """
+  Stazioni ordinate per punteggio decrescente. Senza `date` usa l'ultimo giorno calcolato, che e cio che serve alla domanda "dove ci sono le condizioni adesso".
+  """
+  predictions(input: PredictionsInput): [FruitingPredictionType!]!
+}
+
+"""Profilo di specie con cui i punteggi sono stati calcolati."""
+type SpeciesModelType {
+  active: Boolean!
+  label: String!
+  species: String!
+  version: Int!
+}
+
+"""Punto di misura da cui si valutano le condizioni."""
+type StationType {
+  """Quota in metri s.l.m."""
+  altitudeM: Float
+  id: ID!
+  latitude: Float!
+  longitude: Float!
+  name: String!
+
+  """Sigla: PR, MO, BO..."""
+  province: String
+  provinceName: String
+  region: String
+}

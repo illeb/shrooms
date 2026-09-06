@@ -1,0 +1,6 @@
+dist
+.output
+.nuxt
+coverage
+pnpm-lock.yaml
+packages/graphql-schema/schema.graphql
