@@ -137,10 +137,36 @@ export class IngestionService {
           : [];
 
       if (adapter.stationScope === 'provided' && providedStations.length === 0) {
-        throw new Error(
-          `${code} e' una sorgente a griglia ma non ci sono stazioni osservate a database: ` +
-            `esegui prima l'ingestione di una sorgente a stazioni.`,
-        );
+        // Nessuna coordinata da interrogare puo' voler dire due cose opposte,
+        // e confonderle costa caro: con `--only-missing` in regime stazionario
+        // non manca niente, ed e' il risultato giusto - segnalarlo come errore
+        // vorrebbe dire far fallire il cron ogni mattina, cioe' insegnare a
+        // chi guarda i log che gli errori si ignorano.
+        const registry = await this.prisma.station.count({ where: { active: true } });
+        if (registry === 0) {
+          throw new Error(
+            `${code} e' una sorgente a griglia ma non ci sono stazioni osservate a database: ` +
+              `esegui prima l'ingestione di una sorgente a stazioni.`,
+          );
+        }
+
+        this.logger.log(`${code}: nessuna stazione da aggiornare, niente da fare.`);
+        await this.prisma.ingestionRun.update({
+          where: { id: run.id },
+          data: {
+            status: 'SUCCESS',
+            rowsRead: 0,
+            rowsWritten: 0,
+            finishedAt: new Date(),
+            durationMs: Date.now() - startedAt,
+          },
+        });
+        return {
+          source: code,
+          stationsUpserted: 0,
+          observationsWritten: 0,
+          durationMs: Date.now() - startedAt,
+        };
       }
 
       // Per una sorgente a griglia gli externalId possono appartenere a piu'

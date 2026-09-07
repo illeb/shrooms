@@ -512,12 +512,27 @@ const COMMANDS: Record<string, { describe: string; usage?: string; run: Command 
   },
 
   'forest:import': {
-    describe: 'Carica la Carta forestale regionale 2025 dagli shapefile provinciali.',
-    usage: '[--dir=~/Downloads]',
+    describe: 'Carica una cartografia forestale regionale.',
+    usage: '[--source=er|ift] [--dir=~/Downloads] [--zip=…/ift.zip]',
     run: async (app, args) => {
+      const service = app.get(ForestMapService);
+      const source = args.str('source', 'er').toLowerCase();
+
+      if (source === 'ift' || source === 'toscana') {
+        const zip = args.str('zip', `${process.env['HOME'] ?? '.'}/Downloads/ift.zip`);
+        logger.log(`Inventario Forestale Toscano da ${zip}`);
+        const result = await service.importToscana(zip);
+        logger.log(`${result.polygons} pixel forestali toscani caricati.`);
+        return;
+      }
+
+      if (source !== 'er' && source !== 'emilia') {
+        throw new Error(`--source sconosciuta "${source}". Disponibili: er, ift`);
+      }
+
       const dir = args.str('dir', `${process.env['HOME'] ?? '.'}/Downloads`);
       logger.log(`Cerco CartaForestale2025XX.zip in ${dir}`);
-      const result = await app.get(ForestMapService).importFromDirectory(dir);
+      const result = await service.importEmiliaRomagna(dir);
       logger.log(`${result.files} province, ${result.polygons} poligoni forestali caricati.`);
     },
   },

@@ -17,7 +17,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 
 # ---- build ----
 FROM deps AS build
-COPY tsconfig.base.json turbo.json ./
+COPY tsconfig.base.json ./
 COPY packages/ packages/
 COPY apps/web/ apps/web/
 RUN pnpm --filter @mushrooms/graphql-schema build \

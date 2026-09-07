@@ -6,8 +6,10 @@ import {
 } from '~/composables/useForestPatches';
 import { FOREST_STYLE_ORDER, markerHtml, styleOf } from '~/utils/forestStyle';
 
-const { patches, shownByType, totals, pending, error, refresh } = await useForestPatches();
+const { patches, totals, pending, error, refresh } = await useForestPatches();
 const { types, altitude, minForestPct, update } = useForestPatchFilters();
+const { regions } = await useRegions();
+const { selected: selectedRegions, setRegions, toggleRegion } = useRegionFilter();
 
 /** Solo i tipi che esistono davvero a database: gli altri non meritano un pulsante. */
 const present = computed(() => {
@@ -30,11 +32,16 @@ const altitudeLabel = computed(() => {
 });
 
 const filtersActive = computed(
-  () => types.value.length > 0 || minForestPct.value > 0 || altitudeLabel.value !== 'tutte le quote',
+  () =>
+    types.value.length > 0 ||
+    minForestPct.value > 0 ||
+    selectedRegions.value.length > 0 ||
+    altitudeLabel.value !== 'tutte le quote',
 );
 
 function reset() {
   update({ types: [], altitude: [...ALTITUDE_BOUNDS], minForestPct: 0 });
+  setRegions([]);
 }
 </script>
 
@@ -51,6 +58,14 @@ function reset() {
 
     <UCard class="mb-6">
       <div class="space-y-5">
+        <RegionFilter
+          :regions="regions"
+          :selected="selectedRegions"
+          scope="cells"
+          @toggle="toggleRegion"
+          @clear="setRegions([])"
+        />
+
         <UFormField label="Tipo di bosco" help="Nessuno selezionato = tutti">
           <div class="flex flex-wrap gap-2">
             <UButton
@@ -71,7 +86,7 @@ function reset() {
                 variant="subtle"
                 size="sm"
               >
-                {{ shownByType.get(t) ?? 0 }}
+                {{ totalByType.get(t)?.cells ?? 0 }}
               </UBadge>
             </UButton>
           </div>

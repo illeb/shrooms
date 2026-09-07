@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { ScheduleModule } from '@nestjs/schedule';
 import { validateEnv } from './config/env';
 import { IngestionModule } from './ingestion/ingestion.module';
 import { MycologyModule } from './mycology/mycology.module';
@@ -24,7 +23,9 @@ import { PrismaModule } from './prisma/prisma.module';
       validate: validateEnv,
       envFilePath: ['.env', '../../.env'],
     }),
-    ScheduleModule.forRoot(),
+    // Nessuno scheduler dentro l'API: l'ingestione giornaliera gira nel
+    // container `scheduler`. Qui c'era `ScheduleModule.forRoot()` registrato
+    // con zero job, che e' il modo migliore di far credere che un cron esista.
     PrismaModule,
     IngestionModule,
     MycologyModule,

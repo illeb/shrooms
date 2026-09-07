@@ -21,7 +21,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 
 # ---- build ----
 FROM deps AS build
-COPY tsconfig.base.json turbo.json ./
+COPY tsconfig.base.json ./
 COPY packages/ packages/
 COPY apps/api/ apps/api/
 RUN pnpm --filter @mushrooms/mycology-core build \
@@ -40,6 +40,13 @@ COPY --from=build /app/apps/api/dist           ./apps/api/dist
 COPY --from=build /app/apps/api/package.json   ./apps/api/package.json
 COPY --from=build /app/apps/api/prisma         ./apps/api/prisma
 COPY --from=build /app/apps/api/prisma.config.ts ./apps/api/prisma.config.ts
+
+# Gli script dello scheduler: stessa immagine dell'API, comando diverso. Una
+# sola immagine da costruire e da tenere aggiornata, e la certezza che il cron
+# esegua esattamente il codice che gira in produzione.
+COPY docker/scheduler/ ./docker/scheduler/
+
+RUN chmod +x /app/docker/scheduler/*.sh
 
 WORKDIR /app/apps/api
 USER node

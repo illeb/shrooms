@@ -22,6 +22,7 @@ export interface ForestPatch {
   management: string | null;
   province: string | null;
   provinceName: string | null;
+  region: string | null;
   geoJson: string;
 }
 
@@ -34,7 +35,7 @@ export interface ForestTypeCount {
 }
 
 const FOREST_PATCHES = gql`
-  query ForestPatches($input: ForestPatchesInput) {
+  query ForestPatches($input: ForestPatchesInput, $regions: [String!]) {
     forestPatches(input: $input) {
       id
       code
@@ -48,9 +49,10 @@ const FOREST_PATCHES = gql`
       management
       province
       provinceName
+      region
       geoJson
     }
-    forestTypeCounts {
+    forestTypeCounts(regions: $regions) {
       forestType
       cells
       meanAltitudeM
@@ -132,6 +134,7 @@ export function useForestPatchFilters() {
 export async function useForestPatches() {
   const { client } = useApolloClient();
   const { types, altitude, minForestPct } = useForestPatchFilters();
+  const { selected: selectedRegions } = useRegionFilter();
 
   const { data, pending, error, refresh } = await useAsyncData(
     'forest-patches',
@@ -142,8 +145,10 @@ export async function useForestPatches() {
       }>({
         query: FOREST_PATCHES,
         variables: {
+          regions: selectedRegions.value.length > 0 ? selectedRegions.value : null,
           input: {
             forestTypes: types.value.length > 0 ? types.value : null,
+            regions: selectedRegions.value.length > 0 ? selectedRegions.value : null,
             minAltitudeM: altitude.value[0],
             maxAltitudeM: altitude.value[1],
             minForestFraction: minForestPct.value / 100,
@@ -156,24 +161,27 @@ export async function useForestPatches() {
     {
       watch: [
         () =>
-          [types.value.join(','), altitude.value.join('-'), minForestPct.value].join('|'),
+          [
+            types.value.join(','),
+            altitude.value.join('-'),
+            minForestPct.value,
+            selectedRegions.value.join(','),
+          ].join('|'),
       ],
     },
   );
 
   const patches = computed<ForestPatch[]>(() => data.value?.forestPatches ?? []);
 
-  /** Quante celle di ogni tipo fra quelle mostrate adesso. */
-  const shownByType = computed(() => {
-    const counts = new Map<string, number>();
-    for (const p of patches.value) counts.set(p.forestType, (counts.get(p.forestType) ?? 0) + 1);
-    return counts;
-  });
-
   return {
     patches,
-    shownByType,
-    /** Totali su tutte le celle, indipendenti dai filtri: servono ai contatori. */
+    /**
+     * Conteggi per tipo entro la regione scelta, ciechi agli altri filtri.
+     *
+     * Deliberato: un contatore che scende a zero appena selezioni un tipo non
+     * ti dice piu' quanti sono gli altri, e non puoi aggiungerne un secondo
+     * sapendo cosa stai aggiungendo.
+     */
     totals: computed<ForestTypeCount[]>(() => data.value?.forestTypeCounts ?? []),
     pending,
     error,

@@ -19,13 +19,11 @@ export const envSchema = z.object({
     .transform((v) => v === 'true')
     .pipe(z.boolean()),
 
-  // Ingestione: lo scheduler è disattivabile: i comandi CLI restano sempre usabili.
-  INGESTION_CRON_ENABLED: z
-    .string()
-    .default('false')
-    .transform((v) => v === 'true')
-    .pipe(z.boolean()),
-  INGESTION_CRON: z.string().default('0 30 5 * * *'),
+  // Nessuna configurazione di scheduling qui: l'ingestione giornaliera gira
+  // nel container `scheduler`, che legge `INGESTION_AT` dall'ambiente del
+  // container. Prima c'erano `INGESTION_CRON_ENABLED` e `INGESTION_CRON`, che
+  // passavano la validazione e non erano lette da nessuno: chi apriva il
+  // progetto concludeva che il job esistesse.
 
   OPEN_METEO_BASE_URL: z.url().default('https://api.open-meteo.com'),
   OPEN_METEO_ARCHIVE_URL: z.url().default('https://archive-api.open-meteo.com'),

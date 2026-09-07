@@ -8,6 +8,7 @@ export type ForestType =
   | 'CERRETA'
   | 'QUERCETO'
   | 'ORNO_OSTRIETO'
+  | 'LECCETA'
   | 'CONIFERE'
   | 'MISTO'
   | 'ALTRO';
@@ -23,6 +24,7 @@ export interface ForestCell {
   forestFraction: number | null;
   management: string | null;
   province: string | null;
+  region: string | null;
   provinceName: string | null;
   nearestStationKm: number | null;
   score: number | null;
@@ -37,7 +39,7 @@ export interface ForestCell {
 }
 
 const FOREST_CELLS = gql`
-  query ForestCells($input: ForestCellsInput) {
+  query ForestCells($input: ForestCellsInput, $regions: [String!]) {
     forestCells(input: $input) {
       id
       code
@@ -49,6 +51,7 @@ const FOREST_CELLS = gql`
       forestFraction
       management
       province
+      region
       provinceName
       nearestStationKm
       score
@@ -65,6 +68,10 @@ const FOREST_CELLS = gql`
       label
       version
     }
+    forestTypeCounts(regions: $regions) {
+      forestType
+      cells
+    }
   }
 `;
 
@@ -80,6 +87,7 @@ export const FOREST_LABELS: Record<ForestType, string> = {
   CERRETA: 'Cerreta',
   ORNO_OSTRIETO: 'Orno-ostrieto',
   QUERCETO: 'Querceto',
+  LECCETA: 'Lecceta',
   ALTRO: 'Altro bosco',
 };
 
@@ -100,6 +108,7 @@ export const FOREST_ORDER: ForestType[] = [
   'CERRETA',
   'ORNO_OSTRIETO',
   'QUERCETO',
+  'LECCETA',
   'ALTRO',
 ];
 
@@ -187,6 +196,7 @@ export function useForestFilters() {
 export async function useForestCells() {
   const { client } = useApolloClient();
   const { types, minScore, onlyNearStations, daysSinceRain, rainFilterOff } = useForestFilters();
+  const { selected: selectedRegions } = useRegionFilter();
 
   const { data, pending, error, refresh } = await useAsyncData(
     'forest-cells',
@@ -195,15 +205,18 @@ export async function useForestCells() {
         forestCells: ForestCell[];
         latestPredictionDate: string | null;
         activeSpeciesModel: { label: string; version: number } | null;
+        forestTypeCounts: Array<{ forestType: string; cells: number }>;
       }>({
         query: FOREST_CELLS,
         variables: {
+          regions: selectedRegions.value.length > 0 ? selectedRegions.value : null,
           input: {
             forestTypes: types.value.length > 0 ? types.value : null,
             minScore: minScore.value,
             onlyNearStations: onlyNearStations.value,
             minDaysSinceRain: rainFilterOff.value ? null : daysSinceRain.value[0],
             maxDaysSinceRain: rainFilterOff.value ? null : daysSinceRain.value[1],
+            regions: selectedRegions.value.length > 0 ? selectedRegions.value : null,
           },
         },
         fetchPolicy: 'network-only',
@@ -218,6 +231,7 @@ export async function useForestCells() {
             minScore.value,
             onlyNearStations.value,
             daysSinceRain.value.join('-'),
+            selectedRegions.value.join(','),
           ].join('|'),
       ],
     },
@@ -225,8 +239,23 @@ export async function useForestCells() {
 
   const cells = computed<ForestCell[]>(() => data.value?.forestCells ?? []);
 
+  /**
+   * Quante celle per tipo entro la regione scelta, cieco agli altri filtri.
+   *
+   * Deliberato: un contatore che scende a zero appena selezioni un tipo non
+   * dice piu' quanti sono gli altri, e il filtro diventa a senso unico.
+   */
+  const countByType = computed(() => {
+    const counts = new Map<ForestType, number>();
+    for (const c of data.value?.forestTypeCounts ?? []) {
+      counts.set(c.forestType as ForestType, c.cells);
+    }
+    return counts;
+  });
+
   return {
     cells,
+    countByType,
     pending,
     error,
     refresh,

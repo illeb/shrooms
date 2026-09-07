@@ -41,7 +41,7 @@ type ForestCellType {
   forestLabel: String!
 
   """
-  FAGGETA | CASTAGNETO | CERRETA | QUERCETO | ORNO_OSTRIETO | CONIFERE | MISTO | ALTRO
+  FAGGETA | CASTAGNETO | CERRETA | QUERCETO | ORNO_OSTRIETO | LECCETA | CONIFERE | MISTO | ALTRO
   """
   forestType: String!
 
@@ -61,6 +61,7 @@ type ForestCellType {
   precip21dMm: Float
   province: String
   provinceName: String
+  region: String
   score: Float
   soilWaterMm: Float
   triggerScore: Float
@@ -90,6 +91,9 @@ input ForestCellsInput {
 
   """Solo celle con una stazione osservata entro 5 km."""
   onlyNearStations: Boolean = false
+
+  """Regioni da includere, per nome ("Toscana"). Vuoto = tutte."""
+  regions: [String!]
   species: String = "boletus-edulis"
 }
 
@@ -109,7 +113,7 @@ type ForestPatchType {
   forestLabel: String!
 
   """
-  FAGGETA | CASTAGNETO | CERRETA | QUERCETO | ORNO_OSTRIETO | CONIFERE | MISTO | ALTRO
+  FAGGETA | CASTAGNETO | CERRETA | QUERCETO | ORNO_OSTRIETO | LECCETA | CONIFERE | MISTO | ALTRO
   """
   forestType: String!
 
@@ -123,6 +127,7 @@ type ForestPatchType {
   management: String
   province: String
   provinceName: String
+  region: String
 }
 
 input ForestPatchesInput {
@@ -135,6 +140,9 @@ input ForestPatchesInput {
   Frazione boscata minima, 0..1. Alzarla lascia solo il bosco pieno e toglie le celle a mosaico con prati e coltivi.
   """
   minForestFraction: Float = 0
+
+  """Regioni da includere, per nome ("Toscana"). Vuoto = tutte."""
+  regions: [String!]
 }
 
 """Quante celle di un tipo di bosco, e in che fascia di quota."""
@@ -195,6 +203,9 @@ input PredictionsInput {
   maxAltitudeM: Float
   minAltitudeM: Float
   minScore: Float = 0
+
+  """Regioni da includere, per nome ("Toscana"). Vuoto = tutte."""
+  regions: [String!]
   species: String = "boletus-edulis"
 }
 
@@ -221,7 +232,7 @@ type Query {
   forestPatches(input: ForestPatchesInput): [ForestPatchType!]!
 
   """Conteggio delle celle per tipo di bosco, con quota media."""
-  forestTypeCounts: [ForestTypeCount!]!
+  forestTypeCounts(regions: [String!]): [ForestTypeCount!]!
 
   """Ultimo giorno per cui esistono punteggi, YYYY-MM-DD."""
   latestPredictionDate(species: String = "boletus-edulis"): String
@@ -230,6 +241,19 @@ type Query {
   Stazioni ordinate per punteggio decrescente. Senza `date` usa l'ultimo giorno calcolato, che e cio che serve alla domanda "dove ci sono le condizioni adesso".
   """
   predictions(input: PredictionsInput): [FruitingPredictionType!]!
+
+  """Regioni coperte, con quante stazioni e quante celle ognuna."""
+  regions: [RegionCountType!]!
+}
+
+"""Una regione con quanto ci sta dentro."""
+type RegionCountType {
+  """Celle di bosco."""
+  cells: Int!
+  region: String!
+
+  """Stazioni meteo osservate."""
+  stations: Int!
 }
 
 """Profilo di specie con cui i punteggi sono stati calcolati."""

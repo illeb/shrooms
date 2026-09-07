@@ -41,6 +41,14 @@ export class PredictionsInput {
   @IsNumber()
   maxAltitudeM?: number;
 
+  @Field(() => [String], {
+    nullable: true,
+    description: 'Regioni da includere, per nome ("Toscana"). Vuoto = tutte.',
+  })
+  @IsOptional()
+  @IsString({ each: true })
+  regions?: string[];
+
   @Field(() => Int, { nullable: true, defaultValue: 200 })
   @IsOptional()
   @IsInt()

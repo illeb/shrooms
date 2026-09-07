@@ -28,6 +28,7 @@ const FOREST_TYPES = [
   'CERRETA',
   'QUERCETO',
   'ORNO_OSTRIETO',
+  'LECCETA',
   'CONIFERE',
   'MISTO',
   'ALTRO',
@@ -68,6 +69,7 @@ export class ForestCellType {
 
   @Field(() => String, { nullable: true }) province!: string | null;
   @Field(() => String, { nullable: true }) provinceName!: string | null;
+  @Field(() => String, { nullable: true }) region!: string | null;
 
   @Field(() => Float, {
     nullable: true,
@@ -110,6 +112,14 @@ export class ForestCellsInput {
   @IsOptional()
   @IsIn(FOREST_TYPES, { each: true })
   forestTypes?: string[];
+
+  @Field(() => [String], {
+    nullable: true,
+    description: 'Regioni da includere, per nome ("Toscana"). Vuoto = tutte.',
+  })
+  @IsOptional()
+  @IsString({ each: true })
+  regions?: string[];
 
   @Field(() => Float, { nullable: true }) @IsOptional() @IsNumber() minAltitudeM?: number;
   @Field(() => Float, { nullable: true }) @IsOptional() @IsNumber() maxAltitudeM?: number;
@@ -164,6 +174,7 @@ interface CellRow {
   management: string | null;
   province: string | null;
   provinceName: string | null;
+  region: string | null;
   nearestStationKm: number | null;
   score: number | null;
   class: string | null;
@@ -213,7 +224,7 @@ export class ForestCellResolver {
         SELECT ps."id", ps."code", ps."latitude", ps."longitude", ps."altitudeM",
                ps."forestType"::text AS "forestType", ps."forestLabel",
                ps."forestFraction", ps."management",
-               ps."province", ps."provinceName", ps."nearestStationKm",
+               ps."province", ps."provinceName", ps."region", ps."nearestStationKm",
                COALESCE(p."warmup", false) AS "warmup",
                -- Un giorno in spin-up non e' un giudizio: meglio "non lo so"
                -- che un rosso convinto costruito su dati che non abbiamo.
@@ -243,6 +254,7 @@ export class ForestCellResolver {
         -- filtro si stringe, invece di passare per il rotto della cuffia.
         AND ($7::int IS NULL OR c."daysSinceWetEvent" >= $7)
         AND ($8::int IS NULL OR c."daysSinceWetEvent" <= $8)
+        AND ($9::text[] IS NULL OR c."region" = ANY($9::text[]))
       ORDER BY c."score" DESC NULLS LAST
       `,
       model.id,
@@ -253,6 +265,7 @@ export class ForestCellResolver {
       input?.onlyNearStations ?? false,
       input?.minDaysSinceRain ?? null,
       input?.maxDaysSinceRain ?? null,
+      input?.regions?.length ? input.regions : null,
     );
 
     return rows.map((r) => ({

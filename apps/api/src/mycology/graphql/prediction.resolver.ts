@@ -44,7 +44,10 @@ export class PredictionResolver {
         modelId: model.id,
         date,
         score: { gte: input?.minScore ?? 0 },
-        station: altitudeWhere(input),
+        station: {
+          ...altitudeWhere(input),
+          ...(input?.regions?.length ? { region: { in: input.regions } } : {}),
+        },
       },
       orderBy: [{ score: 'desc' }, { stationId: 'asc' }],
       take: limit,

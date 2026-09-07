@@ -26,6 +26,20 @@ enum IngestionStatus {
   FAILED
 }
 
+/// Da quale cartografia forestale viene un poligono.
+///
+/// Le due carte non sono confrontabili alla cieca: annata, grana e ricchezza
+/// degli attributi sono diverse, e chi legge una cella toscana deve poter
+/// sapere che la sua etichetta viene da un rilievo di trentacinque anni fa.
+enum ForestMapSource {
+  /// Carta forestale regionale Emilia-Romagna 2025. Poligoni vettoriali,
+  /// specie in binomio latino, governo del bosco aggiornato.
+  ER_2025
+  /// Inventario Forestale Toscano: pixel di 400 m, rilievo 1985-1993,
+  /// revisione 2009. Categoria e specie prevalente, niente governo.
+  IFT_TOSCANA
+}
+
 /// Tipo di bosco dominante in una cella, dalla Carta forestale regionale 2025.
 ///
 /// Piu' fine di una semplice divisione latifoglie/conifere perche' e' quello
@@ -43,6 +57,13 @@ enum ForestType {
   QUERCETO
   /// Orno-ostrieti: carpino nero e orniello, il bosco magro di versante.
   ORNO_OSTRIETO
+  /// Leccete e sugherete: la quercia sempreverde mediterranea.
+  ///
+  /// Qui non cresce Boletus edulis ma il porcino nero, B. aereus: e' lo stesso
+  /// genere e la stessa logica di innesco e incubazione, ma con un optimum
+  /// termico piu' alto e una fascia di quota piu' bassa. Sta nell'enum come
+  /// tipo a se' proprio perche' punta a un profilo di specie diverso.
+  LECCETA
   /// Pinete, abetine, rimboschimenti di conifere.
   CONIFERE
   /// Boschi misti senza una specie nettamente prevalente.
@@ -310,6 +331,14 @@ model PredictionSite {
   forestCode  String @db.VarChar(8)
   forestLabel String @db.Text
 
+  /// Da quale carta forestale viene l'etichetta di questa cella.
+  ///
+  /// Serve perche' sul confine appenninico le due carte si sovrappongono e la
+  /// dominanza d'area sceglie fra loro senza dirlo: una cella toscana potrebbe
+  /// prendere il tipo dalla carta emiliana del 2025 o dall'inventario toscano
+  /// del 1990, e a parita' di punteggio le due etichette non valgono uguale.
+  forestSource ForestMapSource?
+
   /// Quanta parte dell'esagono e' davvero bosco, 0..1.
   ///
   /// Il campionamento puntuale non poteva dirlo: sapeva che nel punto c'era
@@ -356,8 +385,16 @@ model PredictionSite {
 /// a WGS84. Serve a classificare le celle per **dominanza di area**, che e'
 /// piu' onesto del campionamento puntuale che usavamo prima.
 model ForestPolygon {
-  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  /// OBJECTID nella carta di origine, unico per provincia.
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  /// Da quale carta forestale arriva questo poligono.
+  source ForestMapSource
+
+  /// Identificativo nella carta di origine, unico per sorgente e provincia.
+  ///
+  /// In Emilia-Romagna e' l'OBJECTID dello shapefile. Nell'Inventario Toscano
+  /// e' il numero d'ordine del record: il suo GID ha due collisioni su 143.728
+  /// e non regge come chiave.
   objectId Int
   province String @db.VarChar(4)
 
@@ -378,6 +415,11 @@ model ForestPolygon {
 
   /// Governo del bosco: ceduo, fustaia... Conta, perche' i porcini
   /// prediligono la fustaia matura al ceduo appena tagliato.
+  ///
+  /// Nullo per l'Inventario Toscano: il suo campo `COLTSTRU` e' un codice
+  /// numerico la cui legenda non e' pubblicata insieme al dato, e comunque
+  /// descriverebbe una selvicoltura dei primi anni Novanta. Meglio vuoto che
+  /// vecchio di trentacinque anni accanto a un dato del 2025.
   management String?
 
   municipality String?
@@ -387,7 +429,8 @@ model ForestPolygon {
 
   importedAt DateTime @default(now()) @db.Timestamptz(3)
 
-  @@unique([province, objectId])
+  @@unique([source, province, objectId])
   @@index([typeCode])
+  @@index([source])
   @@map("forest_polygon")
 }

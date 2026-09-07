@@ -1,7 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { fetchOpenMeteo, sleep } from './adapters/open-meteo/open-meteo-http';
-import type { ForestType } from '../generated/prisma/enums.ts';
+import type { ForestMapSource, ForestType } from '../generated/prisma/enums.ts';
 
 /**
  * Genera le celle di bosco su cui si calcola la previsione.
@@ -181,17 +181,18 @@ export class ForestGridService {
         SELECT i AS idx, ST_SetSRID(ST_GeomFromText(w), 4326) AS geom
         FROM unnest($1::int[], $2::text[]) AS t(i, w)
       )
-      SELECT c.idx,
+      SELECT c.idx, best."source",
              best."typeCode", best."typeName", best."speciesName", best."management",
              (best.wooded / NULLIF(ST_Area(c.geom::geography), 0))::double precision
                AS "forestFraction"
       FROM cells c
       CROSS JOIN LATERAL (
-        SELECT fp."typeCode", fp."typeName", fp."speciesName", fp."management",
+        SELECT fp."source"::text AS "source",
+               fp."typeCode", fp."typeName", fp."speciesName", fp."management",
                SUM(ST_Area(ST_Intersection(fp.geom, c.geom)::geography)) AS wooded
         FROM forest_polygon fp
         WHERE ST_Intersects(fp.geom, c.geom)
-        GROUP BY fp."typeCode", fp."typeName", fp."speciesName", fp."management"
+        GROUP BY fp."source", fp."typeCode", fp."typeName", fp."speciesName", fp."management"
         ORDER BY SUM(ST_Area(ST_Intersection(fp.geom, c.geom)::geography)) DESC
         LIMIT 1
       ) best
@@ -214,6 +215,7 @@ export class ForestGridService {
 
       out.push({
         ...cell,
+        forestSource: r.source,
         forestCode: r.typeCode,
         forestLabel: label(r.typeName, r.speciesName),
         forestType: type,
@@ -253,10 +255,10 @@ export class ForestGridService {
       `
       INSERT INTO "prediction_site" (
         "code","latitude","longitude","altitudeM","forestType","forestCode",
-        "forestLabel","forestFraction","management","stationId","geom"
+        "forestLabel","forestFraction","management","forestSource","stationId","geom"
       )
-      VALUES ($1,$2,$3,$4,$5::"ForestType",$6,$7,$8,$9,$10::uuid,
-              ST_SetSRID(ST_GeomFromText($11), 4326))
+      VALUES ($1,$2,$3,$4,$5::"ForestType",$6,$7,$8,$9,$10::"ForestMapSource",$11::uuid,
+              ST_SetSRID(ST_GeomFromText($12), 4326))
       ON CONFLICT ("code") DO UPDATE SET
         "altitudeM"      = EXCLUDED."altitudeM",
         "forestType"     = EXCLUDED."forestType",
@@ -264,6 +266,7 @@ export class ForestGridService {
         "forestLabel"    = EXCLUDED."forestLabel",
         "forestFraction" = EXCLUDED."forestFraction",
         "management"     = EXCLUDED."management",
+        "forestSource"   = EXCLUDED."forestSource",
         "geom"           = EXCLUDED."geom"
       `,
       code,
@@ -275,6 +278,7 @@ export class ForestGridService {
       cell.forestLabel,
       cell.forestFraction,
       cell.management,
+      cell.forestSource,
       station.id,
       cell.wkt,
     );
@@ -288,6 +292,19 @@ export class ForestGridService {
         "province" = b."acronym", "provinceName" = b."name", "region" = b."region"
       FROM "province_boundary" b
       WHERE ST_Contains(b."geom", ST_SetSRID(ST_MakePoint(s."longitude", s."latitude"), 4326))
+    `);
+
+    // La stessa collocazione va anche sulla stazione gemella. Non e' una
+    // ridondanza inutile: le viste che elencano stazioni leggono da li', e una
+    // cella con la regione solo sul sito resterebbe fuori da ogni filtro
+    // geografico pur essendo in mezzo all'Appennino.
+    await this.prisma.$executeRawUnsafe(`
+      UPDATE "station" st SET
+        "province" = ps."province", "region" = ps."region"
+      FROM "prediction_site" ps
+      WHERE ps."stationId" = st."id"
+        AND (st."region" IS DISTINCT FROM ps."region"
+             OR st."province" IS DISTINCT FROM ps."province")
     `);
 
     await this.prisma.$executeRawUnsafe(`
@@ -316,6 +333,7 @@ interface Cell {
 }
 
 interface ForestCell extends Cell {
+  forestSource: ForestMapSource;
   forestCode: string;
   forestLabel: string;
   forestType: ForestType;
@@ -331,6 +349,7 @@ interface SiteCell extends ForestCell {
 
 interface ClassifiedRow {
   idx: number;
+  source: ForestMapSource;
   typeCode: string;
   typeName: string;
   speciesName: string | null;
@@ -347,10 +366,35 @@ interface ClassifiedRow {
  */
 export function toForestType(typeName: string): ForestType {
   const n = typeName.toLowerCase();
+
+  // Le sempreverdi mediterranee prima di tutto: una "Lecceta costiera su
+  // dune" non deve finire fra i querceti solo perche' il leccio e' una
+  // quercia. Le sugherete stanno con loro - Quercus suber e Q. ilex sono la
+  // stessa gilda sclerofilla e ospitano lo stesso porcino - e il nome vero
+  // resta comunque scritto in `forestLabel`.
+  if (n.includes('leccet') || n.includes('sugheret')) return 'LECCETA';
+
   if (n.includes('fagget')) return 'FAGGETA';
   if (n.includes('castagn')) return 'CASTAGNETO';
   if (n.includes('cerret')) return 'CERRETA';
   if (n.includes('ostriet')) return 'ORNO_OSTRIETO';
+
+  if (
+    n.includes('pinet') ||
+    n.includes('abetin') ||
+    n.includes('cipresset') ||
+    n.includes('douglas') ||
+    n.includes('rimboschiment') ||
+    n.includes('conifer')
+  ) {
+    return 'CONIFERE';
+  }
+
+  // Prima dei querceti: l'IFT ha "Boschi misti con cerro, rovere e carpino
+  // bianco", che e' un bosco misto e non un querceto, e la parola "rovere"
+  // lo dirotterebbe.
+  if (n.includes('mist')) return 'MISTO';
+
   if (
     n.includes('roverella') ||
     n.includes('quercet') ||
@@ -359,15 +403,9 @@ export function toForestType(typeName: string): ForestType {
   ) {
     return 'QUERCETO';
   }
-  if (
-    n.includes('pinet') ||
-    n.includes('abetin') ||
-    n.includes('rimboschiment') ||
-    n.includes('conifer')
-  ) {
-    return 'CONIFERE';
-  }
-  if (n.includes('mist')) return 'MISTO';
+
+  // Macchie, arbusteti, robinieti, alneti, boschi ripari: bosco che non fa
+  // porcini, e le celle su questi vengono scartate a monte.
   return 'ALTRO';
 }
 
@@ -390,6 +428,7 @@ function labelOf(type: ForestType): string {
     CERRETA: 'Cerreta',
     QUERCETO: 'Querceto',
     ORNO_OSTRIETO: 'Orno-ostrieto',
+    LECCETA: 'Lecceta',
     CONIFERE: 'Conifere',
     MISTO: 'Bosco misto',
     ALTRO: 'Bosco',

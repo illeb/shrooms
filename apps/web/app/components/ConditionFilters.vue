@@ -8,6 +8,24 @@ const props = defineProps<{
 }>();
 
 const { altitudeRange, minScore, species, stationIds, reset, isDefault } = useConditionFilters();
+const { regions } = await useRegions();
+const { selected: selectedRegions, setRegions, toggleRegion } = useRegionFilter();
+
+/**
+ * Il filtro di regione non fa parte di `useConditionFilters`.
+ *
+ * Sta in un composable suo perche' lo usano anche le due viste del bosco, che
+ * non condividono nient'altro con questi filtri: metterlo qui avrebbe voluto
+ * dire duplicarlo tre volte o legare le viste del bosco allo stato della
+ * tabella. L'azzeramento invece va tenuto insieme, altrimenti "azzera" ne
+ * lascerebbe uno acceso.
+ */
+function resetAll(): void {
+  reset();
+  setRegions([]);
+}
+
+const nothingSelected = computed(() => isDefault.value && selectedRegions.value.length === 0);
 
 /**
  * Voci dell'autocomplete.
@@ -57,6 +75,16 @@ const selectedButFiltered = computed(
 
 <template>
   <UCard class="mb-6">
+    <div class="mb-5">
+      <RegionFilter
+        :regions="regions"
+        :selected="selectedRegions"
+        scope="all"
+        @toggle="toggleRegion"
+        @clear="setRegions([])"
+      />
+    </div>
+
     <div class="grid gap-5 lg:grid-cols-2">
       <UFormField label="Fungo">
         <USelectMenu
@@ -117,12 +145,12 @@ const selectedButFiltered = computed(
           >I filtri restano nell'indirizzo: la pagina si può salvare o condividere così com'è.</span
         >
         <UButton
-          v-if="!isDefault"
+          v-if="!nothingSelected"
           icon="i-lucide-rotate-ccw"
           color="neutral"
           variant="ghost"
           size="xs"
-          @click="reset()"
+          @click="resetAll()"
         >
           Azzera
         </UButton>

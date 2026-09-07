@@ -114,6 +114,7 @@ export const CLASS_BADGE: Record<FruitingClass, string> = {
 export async function useConditions() {
   const { client } = useApolloClient();
   const { filters } = useConditionFilters();
+  const { selected: selectedRegions } = useRegionFilter();
 
   const { data, pending, error, refresh } = await useAsyncData(
     'conditions',
@@ -127,6 +128,7 @@ export async function useConditions() {
             minScore: filters.value.minScore,
             minAltitudeM: filters.value.minAltitudeM,
             maxAltitudeM: filters.value.maxAltitudeM,
+            regions: selectedRegions.value.length > 0 ? selectedRegions.value : null,
             limit: 1000,
           },
         },
@@ -143,6 +145,7 @@ export async function useConditions() {
             filters.value.minScore,
             filters.value.minAltitudeM,
             filters.value.maxAltitudeM,
+            selectedRegions.value.join(','),
           ].join('|'),
       ],
     },

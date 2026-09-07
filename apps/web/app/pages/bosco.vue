@@ -10,9 +10,11 @@ import {
   type ForestType,
 } from '~/composables/useForestCells';
 
-const { cells, model, latestDate, pending, error, refresh } = await useForestCells();
+const { cells, countByType, model, latestDate, pending, error, refresh } = await useForestCells();
 const { types, minScore, onlyNearStations, daysSinceRain, rainFilterOff, update } =
   useForestFilters();
+const { regions } = await useRegions();
+const { selected: selectedRegions, setRegions, toggleRegion } = useRegionFilter();
 
 /** Etichetta dello slider: dice cosa stai guardando, non due numeri nudi. */
 const rainLabel = computed(() => {
@@ -25,13 +27,6 @@ const rainLabel = computed(() => {
 function setOptimalRain() {
   update({ daysSinceRain: [...OPTIMAL_DAYS_SINCE_RAIN] as [number, number] });
 }
-
-/** Quante celle per tipo di bosco, per popolare i pulsanti col loro peso. */
-const countByType = computed(() => {
-  const c = new Map<ForestType, number>();
-  for (const cell of cells.value) c.set(cell.forestType, (c.get(cell.forestType) ?? 0) + 1);
-  return c;
-});
 
 function toggleType(t: ForestType) {
   const next = types.value.includes(t) ? types.value.filter((x) => x !== t) : [...types.value, t];
@@ -59,6 +54,14 @@ const scored = computed(() => cells.value.filter((c) => (c.score ?? 0) >= 35).le
 
     <UCard class="mb-6">
       <div class="space-y-5">
+        <RegionFilter
+          :regions="regions"
+          :selected="selectedRegions"
+          scope="cells"
+          @toggle="toggleRegion"
+          @clear="setRegions([])"
+        />
+
         <UFormField label="Tipo di bosco" help="Nessuno selezionato = tutti">
           <div class="flex flex-wrap gap-2">
             <UButton

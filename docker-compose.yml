@@ -42,6 +42,46 @@ services:
       - '${API_PORT:-4000}:4000'
     profiles: ['full']
 
+  # L'ingestione giornaliera vive qui e non dentro l'API.
+  #
+  # Il motivo e' che i due processi hanno modi diversi di rompersi: se l'API
+  # cade, un job che vivesse dentro di lei semplicemente non partirebbe, e non
+  # ci sarebbe niente a dirlo - la mappa resterebbe a ieri senza un errore.
+  # Separandoli, un'API giu' non ferma l'ingestione e uno scheduler giu' si
+  # vede in `docker ps`.
+  #
+  # Stessa immagine dell'API, comando diverso: nessuna seconda build, e il
+  # cron esegue esattamente il codice che gira in produzione.
+  scheduler:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: mushrooms-scheduler
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-mushrooms}:${POSTGRES_PASSWORD:-mushrooms}@postgres:5432/${POSTGRES_DB:-mushrooms}?schema=public
+      # Il fuso non e' un dettaglio: tutto il sistema ragiona per giorni locali
+      # italiani, e uno scheduler in UTC lancerebbe l'ingestione alle 7:30 di
+      # mattina d'estate, con l'ultimo giorno completo ancora incerto.
+      TZ: ${TZ:-Europe/Rome}
+      INGESTION_AT: ${INGESTION_AT:-05:30}
+      INGESTION_RUN_ON_START: ${INGESTION_RUN_ON_START:-false}
+    entrypoint: ['/app/docker/scheduler/entrypoint.sh']
+    # L'immagine e' quella dell'API e porta con se' il suo HEALTHCHECK, che
+    # interroga la porta 4000: qui non c'e' nessun server ad ascoltare, quindi
+    # il container risulterebbe unhealthy per sempre. Un falso allarme
+    # permanente e' peggio di nessun controllo, perche' e' l'unico che si
+    # impara a ignorare. Se serve un controllo vero, la domanda giusta e'
+    # "l'ultima ingestione e' finita nelle ultime 26 ore" - una query su
+    # `ingestion_run`, non un ping HTTP.
+    healthcheck:
+      disable: true
+    profiles: ['full', 'scheduler']
+
   web:
     build:
       context: .

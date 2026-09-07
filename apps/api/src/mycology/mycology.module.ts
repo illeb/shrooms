@@ -3,6 +3,7 @@ import { MycologyService } from './mycology.service';
 import { SpeciesModelService } from './species-model.service';
 import { ForestCellResolver } from './graphql/forest-cell.resolver';
 import { ForestPatchResolver } from './graphql/forest-patch.resolver';
+import { RegionResolver } from './graphql/region.resolver';
 import { PredictionResolver } from './graphql/prediction.resolver';
 
 /**
@@ -18,6 +19,7 @@ import { PredictionResolver } from './graphql/prediction.resolver';
     PredictionResolver,
     ForestCellResolver,
     ForestPatchResolver,
+    RegionResolver,
   ],
   exports: [SpeciesModelService, MycologyService],
 })

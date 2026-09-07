@@ -18,7 +18,9 @@
  * La palette e' qualitativa e non una rampa: i tipi non stanno in scala fra
  * loro. Le tinte seguono comunque la quota - verdi freddi in alto, ocra e
  * bruni in basso - cosi' la mappa dice qualcosa anche a chi non legge la
- * legenda.
+ * legenda. Con otto tipi lo spazio delle tinte finisce: la lecceta prende un
+ * rosso mattone che non segue quella logica, e se la fa portare dall'icona e
+ * dalla legenda.
  */
 
 export interface ForestTypeStyle {
@@ -72,6 +74,13 @@ export const FOREST_STYLE: Record<string, ForestTypeStyle> = {
     // lucide/shrub
     icon: "<g><path d='M12 22v-5.172a2 2 0 0 0-.586-1.414L9.5 13.5m5 1L12 17'/><path d='M17 8.8A6 6 0 0 1 13.8 20H10A6.5 6.5 0 0 1 7 8a5 5 0 0 1 10 0z'/></g>",
   },
+  LECCETA: {
+    label: 'Lecceta',
+    color: '#7a3b3b',
+    note: 'Leccio e sughera, la quercia sempreverde. Qui il porcino \u00e8 B. aereus.',
+    // lucide/leafy-green
+    icon: "<path d='M2 22c1.25-.987 2.27-1.975 3.9-2.2a5.56 5.56 0 0 1 3.8 1.5a4 4 0 0 0 6.187-2.353a3.5 3.5 0 0 0 3.69-5.116A3.5 3.5 0 0 0 20.95 8A3.5 3.5 0 1 0 16 3.05a3.5 3.5 0 0 0-5.831 1.373a3.5 3.5 0 0 0-5.116 3.69a4 4 0 0 0-2.348 6.155C3.499 15.42 4.409 16.712 4.2 18.1C3.926 19.743 3.014 20.732 2 22m0 0L17 7'/>",
+  },
   QUERCETO: {
     label: 'Querceto',
     color: '#c9922e',
@@ -97,6 +106,7 @@ export const FOREST_STYLE_ORDER = [
   'CERRETA',
   'ORNO_OSTRIETO',
   'QUERCETO',
+  'LECCETA',
   'ALTRO',
 ] as const;
 
