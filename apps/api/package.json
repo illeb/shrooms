@@ -37,6 +37,7 @@
     "graphql": "^16.11.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
+    "shapefile": "^0.6.6",
     "ts-morph": "^28.0.0",
     "yaml": "^2.9.0",
     "zod": "^4.5.4"
@@ -45,6 +46,7 @@
     "@nestjs/cli": "^12.0.0",
     "@nestjs/testing": "^12.0.1",
     "@types/node": "^26.4.1",
+    "@types/shapefile": "^0.6.4",
     "dotenv": "^17.2.4",
     "prisma": "^7.10.0",
     "tsx": "^4.23.13",

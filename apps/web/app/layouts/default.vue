@@ -2,6 +2,8 @@
 const links = [
   { label: 'Tabella', icon: 'i-lucide-table', to: '/tabella' },
   { label: 'Mappa', icon: 'i-lucide-map', to: '/mappa' },
+  { label: 'Bosco', icon: 'i-lucide-trees', to: '/bosco' },
+  { label: 'Tipi di bosco', icon: 'i-lucide-tree-deciduous', to: '/tipi-di-bosco' },
 ];
 </script>
 

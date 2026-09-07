@@ -3,6 +3,8 @@ import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import type { INestApplicationContext } from '@nestjs/common';
 import { CliModule } from '../cli.module';
+import { ForestGridService } from '../ingestion/forest-grid.service';
+import { ForestMapService } from '../ingestion/forest-map.service';
 import { GeocodingService } from '../ingestion/geocoding.service';
 import { IngestionService } from '../ingestion/ingestion.service';
 import type { WeatherSourceCode } from '../generated/prisma/enums.ts';
@@ -186,7 +188,9 @@ const COMMANDS: Record<string, { describe: string; usage?: string; run: Command 
 
   'ingest:weather': {
     describe: 'Scarica le osservazioni giornaliere di una sorgente.',
-    usage: '--source=… [--from=…] [--to=…] [--days=N] [--min-altitude=N] [--max-altitude=N]',
+    usage:
+      '--source=… [--from=…] [--to=…] [--days=N] [--min-altitude=N] [--max-altitude=N] ' +
+      '[--only-missing] [--prefer-recent]',
     run: async (app, args) => {
       const source = parseSource(args.str('source', 'ARPAE_ER'));
       // Default: la finestra scorrevole che serve al cron giornaliero. Sette
@@ -199,7 +203,12 @@ const COMMANDS: Record<string, { describe: string; usage?: string; run: Command 
       logger.log(`${source}: ingestione ${isoDay(from)} -> ${isoDay(to)}`);
       const result = await app
         .get(IngestionService)
-        .ingest(source, { from, to }, altitudeFilter(args));
+        .ingest(
+          source,
+          { from, to },
+          { ...altitudeFilter(args), ...(args.has('only-missing') ? { onlyMissing: true } : {}) },
+          { preferRecent: args.has('prefer-recent') },
+        );
       logger.log(
         `${source}: ${result.observationsWritten} osservazioni, ${result.stationsUpserted} stazioni, ` +
           `in ${(result.durationMs / 1000).toFixed(1)}s`,
@@ -499,6 +508,45 @@ const COMMANDS: Record<string, { describe: string; usage?: string; run: Command 
         `${result.contained} stazioni dentro un confine, ${result.nearest} attribuite ` +
           `alla provincia piu' vicina entro 5 km, ${result.unresolved} irrisolte.`,
       );
+    },
+  },
+
+  'forest:import': {
+    describe: 'Carica la Carta forestale regionale 2025 dagli shapefile provinciali.',
+    usage: '[--dir=~/Downloads]',
+    run: async (app, args) => {
+      const dir = args.str('dir', `${process.env['HOME'] ?? '.'}/Downloads`);
+      logger.log(`Cerco CartaForestale2025XX.zip in ${dir}`);
+      const result = await app.get(ForestMapService).importFromDirectory(dir);
+      logger.log(`${result.files} province, ${result.polygons} poligoni forestali caricati.`);
+    },
+  },
+
+  'sites:generate': {
+    describe: 'Genera le celle di bosco su cui calcolare la previsione.',
+    usage:
+      '[--bbox=sud,ovest,nord,est] [--cell-km=3] [--min-altitude=400] [--max-altitude=1700] [--limit=N]',
+    run: async (app, args) => {
+      // Default: la fascia appenninica emiliano-romagnola.
+      const raw = args.str('bbox', '43.75,9.50,44.55,12.40').split(',').map(Number);
+      if (raw.length !== 4 || raw.some((n) => !Number.isFinite(n))) {
+        throw new Error('--bbox va scritto come sud,ovest,nord,est');
+      }
+      const bbox: [number, number, number, number] = [raw[0]!, raw[1]!, raw[2]!, raw[3]!];
+
+      const result = await app.get(ForestGridService).generate({
+        bbox,
+        cellKm: args.int('cell-km', 3),
+        minAltitudeM: args.int('min-altitude', 400),
+        maxAltitudeM: args.int('max-altitude', 1700),
+        ...(args.has('limit') ? { limit: args.int('limit', 0) } : {}),
+      });
+
+      logger.log(
+        `${result.candidates} celle candidate -> ${result.forest} boscate -> ` +
+          `${result.inAltitude} in quota -> ${result.written} salvate.`,
+      );
+      logger.log('Ora scarica il meteo delle celle: cli ingest:weather --source=OPEN_METEO');
     },
   },
 

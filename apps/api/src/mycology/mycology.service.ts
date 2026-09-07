@@ -100,6 +100,8 @@ export class MycologyService {
       }
     }
 
+    await this.dropBeyondObserved(modelId, range);
+
     return {
       stationsProcessed: processed,
       featuresWritten,
@@ -140,15 +142,31 @@ export class MycologyService {
     modelId: string,
     range: DateRange,
   ): Promise<{ features: number; predictions: number }> {
-    const { features, hasObserved } = await this.featuresFor(station, profile, range);
+    const { features, hasObserved, lastObserved } = await this.featuresFor(
+      station,
+      profile,
+      range,
+    );
     if (features.length === 0) return { features: 0, predictions: 0 };
 
     const scores = scoreSeries(features, profile, {
       confidence: hasObserved ? 'observed' : 'modelled',
     });
 
-    // Solo i giorni richiesti: la serie e' piu' lunga per via dello spin-up.
-    const inRange = (d: Date) => d >= range.from && d <= range.to;
+    // Solo i giorni richiesti - la serie e' piu' lunga per via dello spin-up -
+    // e mai oltre l'ultimo giorno di cui abbiamo davvero il meteo.
+    //
+    // Quest'ultimo vincolo non e' pignoleria. La serie viene riempita fino in
+    // fondo all'intervallo, e i giorni riempiti sono asciutti per costruzione:
+    // una stazione ferma da cinque giorni verrebbe letta come "non piove da
+    // cinque giorni", quindi con l'incubazione a buon punto, e prenderebbe un
+    // punteggio alto proprio perche' le manca la pioggia di ieri. Misurato:
+    // 100 celle ferme al 01/09 segnavano 56.6 di media contro il 3.6 di 997
+    // celle aggiornate al 05/09, a pari quota - la differenza erano i 5.8 mm
+    // del 2 settembre, che le prime non avevano visto. Meglio nessun
+    // punteggio che un punteggio costruito su una siccita' inventata.
+    const inRange = (d: Date) =>
+      d >= range.from && d <= range.to && (lastObserved === undefined || d <= lastObserved);
 
     const featureRows = features.filter((f) => inRange(f.date));
     const scoreRows = scores.filter((s) => inRange(s.date));
@@ -157,6 +175,49 @@ export class MycologyService {
     await this.writePredictions(station.id, modelId, scoreRows);
 
     return { features: featureRows.length, predictions: scoreRows.length };
+  }
+
+  /**
+   * Rimuove feature e punteggi oltre l'ultimo giorno osservato di ogni stazione.
+   *
+   * Non basta non riscriverli: un punteggio calcolato ieri, quando i dati
+   * arrivavano piu' avanti, resterebbe a dire qualcosa che oggi non sappiamo
+   * piu'. E capita anche all'indietro - una potatura dello storico, una
+   * stazione dismessa, una sorgente che ritira un giorno.
+   *
+   * Una sola query per tutte le stazioni: farlo dentro il ciclo costava due
+   * DELETE per stazione, quasi 3.800 statement, e portava `predict:run` da
+   * 10 secondi a oltre 15 minuti.
+   */
+  private async dropBeyondObserved(modelId: string, range: DateRange): Promise<void> {
+    const ultimo = `
+      SELECT s.id AS "stationId",
+             (SELECT max(o.date) FROM daily_observation o WHERE o."stationId" = s.id) AS last
+      FROM station s`;
+
+    await this.prisma.$executeRawUnsafe(
+      `WITH ultimo AS (${ultimo})
+       DELETE FROM fruiting_prediction p
+       USING ultimo u
+       WHERE p."stationId" = u."stationId"
+         AND p."modelId" = $1::uuid
+         AND p.date >= $2 AND p.date <= $3
+         AND (u.last IS NULL OR p.date > u.last)`,
+      modelId,
+      range.from,
+      range.to,
+    );
+
+    await this.prisma.$executeRawUnsafe(
+      `WITH ultimo AS (${ultimo})
+       DELETE FROM daily_station_feature f
+       USING ultimo u
+       WHERE f."stationId" = u."stationId"
+         AND f.date >= $1 AND f.date <= $2
+         AND (u.last IS NULL OR f.date > u.last)`,
+      range.from,
+      range.to,
+    );
   }
 
   /**
@@ -170,7 +231,7 @@ export class MycologyService {
     station: { id: string; latitude: number; altitudeM: number | null },
     profile: SpeciesProfile,
     range: DateRange,
-  ): Promise<{ features: DailyFeatures[]; hasObserved: boolean }> {
+  ): Promise<{ features: DailyFeatures[]; hasObserved: boolean; lastObserved?: Date }> {
     const LOOKBACK_DAYS = 120;
     const from = new Date(range.from.getTime() - LOOKBACK_DAYS * DAY_MS);
 
@@ -181,8 +242,20 @@ export class MycologyService {
 
     if (rows.length === 0) return { features: [], hasObserved: false };
 
+    // Le righe sono ordinate per data: l'ultima e' l'ultimo giorno noto.
+    const lastObserved = rows[rows.length - 1]?.date;
+
     const merged = mergeBySource(rows);
-    const series = fillGaps(merged, from, range.to);
+
+    // La serie parte dalla prima osservazione vera, non per forza 120 giorni
+    // prima: per una stazione appena creata quel preambolo sarebbe fatto di
+    // giorni inventati senza pioggia, il serbatoio si svuoterebbe e il modello
+    // leggerebbe una siccita' che nessuno ha misurato. Partendo dal primo dato
+    // vero, i giorni che restano dentro lo spin-up si marcano `warmup` e chi
+    // legge sa che non sono ancora un giudizio.
+    const firstObserved = merged[0]?.date;
+    const start = firstObserved && firstObserved > from ? firstObserved : from;
+    const series = fillGaps(merged, start, range.to);
 
     const hasObserved = rows.some((r) => SOURCE_PRIORITY[r.source] >= 90);
 
@@ -193,7 +266,7 @@ export class MycologyService {
       kc: profile.water.kc,
     });
 
-    return { features, hasObserved };
+    return { features, hasObserved, ...(lastObserved ? { lastObserved } : {}) };
   }
 
   private async writeFeatures(stationId: string, features: DailyFeatures[]): Promise<void> {

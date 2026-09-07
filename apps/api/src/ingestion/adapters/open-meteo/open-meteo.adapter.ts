@@ -1,9 +1,11 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Env } from '../../../config/env';
+import { fetchOpenMeteo, sleep } from './open-meteo-http';
 import type {
   DailyObservationUpsert,
   DateRange,
+  FetchOptions,
   FetchSummary,
   ObservationSink,
   StationUpsert,
@@ -64,11 +66,14 @@ export class OpenMeteoAdapter implements WeatherSourceAdapter {
   private static readonly ARCHIVE_MODEL = 'era5_seamless';
 
   /**
-   * Quanto indietro arriva l'endpoint del passato recente, verificato sul
-   * messaggio di errore del servizio: 92 giorni. Piu' indietro si passa
-   * dall'archivio.
+   * Quanto indietro arriva davvero l'endpoint del passato recente.
+   *
+   * Il servizio ne dichiara 92 nel messaggio d'errore, ed era il numero che
+   * stava qui, ma e' il limite del parametro, non dei dati: chiedendo 92
+   * giorni risponde 200 con le prime trenta righe a `null`. Misurato sul
+   * campo, i valori partono da oggi-61. Piu' indietro si passa dall'archivio.
    */
-  private static readonly RECENT_MAX_PAST_DAYS = 92;
+  private static readonly RECENT_MAX_PAST_DAYS = 61;
 
   /**
    * Giorni per richiesta.
@@ -79,9 +84,6 @@ export class OpenMeteoAdapter implements WeatherSourceAdapter {
    * piccola e prevedibile.
    */
   private static readonly MAX_DAYS_PER_REQUEST = 92;
-
-  /** Tentativi su 429 e errori temporanei, con attesa crescente. */
-  private static readonly MAX_RETRIES = 5;
 
   private static readonly DAILY_VARS = [
     'temperature_2m_mean',
@@ -108,6 +110,7 @@ export class OpenMeteoAdapter implements WeatherSourceAdapter {
     range: DateRange,
     stations: StationUpsert[],
     sink: ObservationSink,
+    options: FetchOptions = {},
   ): Promise<FetchSummary> {
     if (stations.length === 0) return { stationsSeen: 0, observationsWritten: 0 };
 
@@ -136,8 +139,8 @@ export class OpenMeteoAdapter implements WeatherSourceAdapter {
     let written = 0;
     let incompleteReason: string | undefined;
 
-    // Passato consolidato -> archivio ERA5.
-    if (from <= archiveEnd) {
+    // Passato consolidato -> archivio ERA5, salvo richiesta contraria.
+    if (from <= archiveEnd && !options.preferRecent) {
       const end = to < archiveEnd ? to : archiveEnd;
       const r = await this.query('archive', stations, from, end, sink);
       written += r.written;
@@ -146,7 +149,7 @@ export class OpenMeteoAdapter implements WeatherSourceAdapter {
 
     // Passato recente -> endpoint "forecast", che serve anche i giorni appena
     // trascorsi non ancora consolidati in archivio. Mai oltre oggi.
-    const recentStart = addDays(archiveEnd, 1);
+    const recentStart = options.preferRecent ? from : addDays(archiveEnd, 1);
     if (to >= recentStart) {
       const earliest = addDays(today, -OpenMeteoAdapter.RECENT_MAX_PAST_DAYS);
 
@@ -225,46 +228,14 @@ export class OpenMeteoAdapter implements WeatherSourceAdapter {
     return { written };
   }
 
-  /**
-   * GET con backoff sui 429 e sugli errori temporanei.
-   *
-   * Il limite di Open-Meteo e' al minuto, quindi l'attesa parte da un minuto
-   * su 429: ritentare subito non farebbe che consumare un altro tentativo.
-   */
+  /** Una risposta o un array, a seconda che le coordinate siano una o tante. */
   private async fetchWithRetry(url: string, endpoint: string): Promise<OpenMeteoResponse[]> {
-    let lastError = '';
-
-    for (let attempt = 1; attempt <= OpenMeteoAdapter.MAX_RETRIES; attempt += 1) {
-      const response = await fetch(url);
-
-      if (response.ok) {
-        const payload = (await response.json()) as OpenMeteoResponse | OpenMeteoResponse[];
-        return Array.isArray(payload) ? payload : [payload];
-      }
-
-      const body = await response.text().catch(() => '');
-      lastError = `${response.status}: ${body.slice(0, 200)}`;
-
-      // Il limite al minuto passa aspettando; quello orario o giornaliero no:
-      // meglio fermarsi subito e riprendere piu' tardi che bruciare tentativi.
-      const hardLimit = /hourly|daily/i.test(body);
-      const retryable = (response.status === 429 && !hardLimit) || response.status >= 500;
-      if (!retryable || attempt === OpenMeteoAdapter.MAX_RETRIES) break;
-
-      const retryAfter = Number.parseInt(response.headers.get('retry-after') ?? '', 10);
-      const waitMs = Number.isFinite(retryAfter)
-        ? retryAfter * 1000
-        : response.status === 429
-          ? 60_000 * attempt
-          : 2_000 * attempt;
-
-      this.logger.warn(
-        `Open-Meteo ${endpoint} ${lastError} — attendo ${Math.round(waitMs / 1000)}s (tentativo ${attempt}/${OpenMeteoAdapter.MAX_RETRIES})`,
-      );
-      await sleep(waitMs);
-    }
-
-    throw new Error(`Open-Meteo ${endpoint} ha risposto ${lastError}`);
+    const payload = await fetchOpenMeteo<OpenMeteoResponse | OpenMeteoResponse[]>(
+      url,
+      endpoint,
+      this.logger,
+    );
+    return Array.isArray(payload) ? payload : [payload];
   }
 
   private buildUrl(
@@ -374,8 +345,4 @@ function sliceDays(from: Date, to: Date, maxDays: number): Array<{ from: Date; t
     start = addDays(end, 1);
   }
   return out;
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }

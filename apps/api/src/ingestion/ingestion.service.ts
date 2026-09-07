@@ -7,6 +7,7 @@ import type {
   DailyObservationUpsert,
   DateRange,
   FetchBatch,
+  FetchOptions,
   StationUpsert,
   WeatherSourceAdapter,
 } from './adapters/weather-source.adapter';
@@ -23,6 +24,17 @@ import type {
 export interface StationFilter {
   minAltitudeM?: number;
   maxAltitudeM?: number;
+  /**
+   * Salta le stazioni che hanno gia' tutti i giorni dell'intervallo per
+   * questa sorgente.
+   *
+   * Serve a riprendere un'ingestione fermata da un rate limit. Senza, la
+   * ripartenza rifa' da capo anche i blocchi gia' scaricati: su Open-Meteo,
+   * che pesa le chiamate come coordinate x giorni/14, riprendere costava
+   * quanto la prima volta e con una quota giornaliera finita si finiva a non
+   * chiudere mai. Con questo, ogni giro costa solo cio' che manca davvero.
+   */
+  onlyMissing?: boolean;
 }
 
 export interface IngestionResult {
@@ -92,6 +104,7 @@ export class IngestionService {
     code: WeatherSourceCode,
     range: DateRange,
     filter: StationFilter = {},
+    options: FetchOptions = {},
   ): Promise<IngestionResult> {
     const adapter = this.adapterFor(code);
     const startedAt = Date.now();
@@ -119,7 +132,9 @@ export class IngestionService {
       // Le sorgenti a griglia hanno bisogno delle coordinate da interrogare:
       // sono quelle delle stazioni osservate gia' presenti a database.
       const providedStations =
-        adapter.stationScope === 'provided' ? await this.observedStations(filter) : [];
+        adapter.stationScope === 'provided'
+          ? await this.observedStations(filter, code, range)
+          : [];
 
       if (adapter.stationScope === 'provided' && providedStations.length === 0) {
         throw new Error(
@@ -128,8 +143,10 @@ export class IngestionService {
         );
       }
 
-      // Le sorgenti a griglia scrivono sulle righe-stazione dell'osservato.
-      const scope: WeatherSourceCode = adapter.stationScope === 'own' ? code : 'ARPAE_ER';
+      // Per una sorgente a griglia gli externalId possono appartenere a piu'
+      // anagrafiche (stazioni Arpae e celle di bosco): si risolvono su tutte.
+      const scope: WeatherSourceCode | undefined =
+        adapter.stationScope === 'own' ? code : undefined;
       const idByExternalId = await this.stationIdMap(scope);
 
       let stationsUpserted = 0;
@@ -153,7 +170,7 @@ export class IngestionService {
         return result.written;
       };
 
-      const summary = await adapter.fetchDaily(range, providedStations, sink);
+      const summary = await adapter.fetchDaily(range, providedStations, sink, options);
 
       if (orphans > 0) {
         this.logger.warn(`${orphans} osservazioni scartate: stazione non trovata in anagrafica`);
@@ -204,8 +221,18 @@ export class IngestionService {
     }
   }
 
-  /** Stazioni reali (non di griglia) da usare come coordinate per Open-Meteo. */
-  private async observedStations(filter: StationFilter): Promise<StationUpsert[]> {
+  /**
+   * Coordinate da interrogare per una sorgente a griglia.
+   *
+   * Include le stazioni osservate **e** le celle di bosco: una cella e' una
+   * stazione sintetica con `source = OPEN_METEO`, e ha bisogno degli stessi
+   * dati. Senza, le celle resterebbero senza meteo.
+   */
+  private async observedStations(
+    filter: StationFilter,
+    source: WeatherSourceCode,
+    range: DateRange,
+  ): Promise<StationUpsert[]> {
     const altitude =
       filter.minAltitudeM === undefined && filter.maxAltitudeM === undefined
         ? {}
@@ -216,11 +243,13 @@ export class IngestionService {
             },
           };
 
+    const covered = filter.onlyMissing ? await this.fullyCovered(source, range) : [];
+
     const rows = await this.prisma.station.findMany({
       where: {
         active: true,
-        source: { in: ['ARPAE_ER', 'MARCHE_AMAP', 'SIR_TOSCANA'] },
         ...altitude,
+        ...(covered.length > 0 ? { id: { notIn: covered } } : {}),
       },
       select: {
         source: true,
@@ -241,8 +270,33 @@ export class IngestionService {
         `Filtro di quota [${filter.minAltitudeM ?? '-'}, ${filter.maxAltitudeM ?? '-'}] m: ${rows.length} stazioni`,
       );
     }
+    if (filter.onlyMissing) {
+      this.logger.log(`Solo mancanti: ${covered.length} stazioni gia' complete, salto`);
+    }
 
     return rows.map((r) => ({ ...r, active: true }));
+  }
+
+  /**
+   * Stazioni che hanno gia' ogni giorno dell'intervallo per questa sorgente.
+   *
+   * "Ogni giorno" e non "abbastanza giorni": Open-Meteo e' una griglia, non
+   * ha buchi, quindi una stazione con un giorno in meno ne ha davvero uno in
+   * meno. Su una sorgente osservata come Arpae, dove i buchi sono la norma,
+   * il confronto non si soddisfa quasi mai e il filtro non fa nulla - che e'
+   * il comportamento giusto, perche' Arpae non ha quota da risparmiare.
+   */
+  private async fullyCovered(source: WeatherSourceCode, range: DateRange): Promise<string[]> {
+    const days = Math.round((range.to.getTime() - range.from.getTime()) / 86_400_000) + 1;
+
+    const rows = await this.prisma.dailyObservation.groupBy({
+      by: ['stationId'],
+      where: { source, date: { gte: range.from, lte: range.to } },
+      _count: { date: true },
+      having: { date: { _count: { gte: days } } },
+    });
+
+    return rows.map((r) => r.stationId);
   }
 
   private async upsertStations(stations: StationUpsert[]): Promise<number> {
@@ -268,9 +322,9 @@ export class IngestionService {
     return count;
   }
 
-  private async stationIdMap(source: WeatherSourceCode): Promise<Map<string, string>> {
+  private async stationIdMap(source?: WeatherSourceCode): Promise<Map<string, string>> {
     const rows = await this.prisma.station.findMany({
-      where: { source },
+      where: source === undefined ? {} : { source },
       select: { id: true, externalId: true },
     });
     return new Map(rows.map((r) => [r.externalId, r.id]));

@@ -26,6 +26,31 @@ enum IngestionStatus {
   FAILED
 }
 
+/// Tipo di bosco dominante in una cella, dalla Carta forestale regionale 2025.
+///
+/// Piu' fine di una semplice divisione latifoglie/conifere perche' e' quello
+/// che la carta distingue e perche' ai funghi interessa: la faggeta d'alta
+/// quota e la cerreta di collina buttano in momenti diversi, e ospitano
+/// specie di porcino diverse.
+enum ForestType {
+  /// Faggete. Il porcino d'alta quota, fine estate e autunno.
+  FAGGETA
+  /// Castagneti. Fascia media, spesso il primo a partire.
+  CASTAGNETO
+  /// Cerrete (Quercus cerris). Collina e bassa montagna.
+  CERRETA
+  /// Boschi di roverella, rovere, farnia.
+  QUERCETO
+  /// Orno-ostrieti: carpino nero e orniello, il bosco magro di versante.
+  ORNO_OSTRIETO
+  /// Pinete, abetine, rimboschimenti di conifere.
+  CONIFERE
+  /// Boschi misti senza una specie nettamente prevalente.
+  MISTO
+  /// Robinieti, pioppeti, arbusteti: bosco che non fa porcini.
+  ALTRO
+}
+
 /// Sorgenti dati registrate. Aggiungerne una richiede un adapter e una voce qui.
 enum WeatherSourceCode {
   /// Arpae SIMC, Emilia-Romagna. Osservato, rete a terra.
@@ -91,6 +116,8 @@ model Station {
   observations DailyObservation[]
   features     DailyStationFeature[]
   predictions  FruitingPrediction[]
+  /// Valorizzata solo per le stazioni sintetiche che rappresentano una cella.
+  site         PredictionSite?      @relation("SiteStation")
 
   @@unique([source, externalId])
   @@index([latitude, longitude])
@@ -255,4 +282,112 @@ model ProvinceBoundary {
   importedAt DateTime @default(now()) @db.Timestamptz(3)
 
   @@map("province_boundary")
+}
+
+/// Cella di bosco su cui si calcola la previsione.
+///
+/// E' il pezzo che separa "dove misuriamo" da "dove cerchiamo i funghi": le
+/// stazioni stanno dove qualcuno ha messo un termometro, di solito a fondovalle;
+/// i porcini stanno nel bosco, in quota, sui versanti. Una cella e' un esagono
+/// di ~3 km centrato nel bosco, con la sua specie dominante e la sua quota.
+///
+/// Ogni sito ha una `Station` gemella con `source = OPEN_METEO`: e' cosi' che
+/// riusa senza modifiche l'ingestione, il feature store e il motore di scoring.
+/// Nel nostro schema una "stazione" e' gia' definita come punto di misura, non
+/// come impianto fisico.
+model PredictionSite {
+  id   String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// Identificativo stabile derivato dalle coordinate: "bosco:LAT:LON".
+  code String @unique @db.VarChar(64)
+
+  latitude  Float
+  longitude Float
+  /// Quota del centro cella, dal modello digitale del terreno di Open-Meteo.
+  altitudeM Float
+
+  forestType  ForestType
+  /// Codice e descrizione originali della carta regionale, per tracciabilita'.
+  forestCode  String @db.VarChar(8)
+  forestLabel String @db.Text
+
+  /// Quanta parte dell'esagono e' davvero bosco, 0..1.
+  ///
+  /// Il campionamento puntuale non poteva dirlo: sapeva che nel punto c'era
+  /// una faggeta, non se ne coprisse l'80% della cella o il 20%. Con la carta
+  /// forestale a database si misura l'area, e la differenza conta: una cella
+  /// boscata per intero e' una scommessa diversa da una a mosaico coi prati.
+  forestFraction Float?
+
+  /// Governo del bosco (ceduo, fustaia...) dalla carta regionale.
+  ///
+  /// Non entra nel punteggio, ma un ceduo giovane e una fustaia matura non
+  /// danno la stessa raccolta a parita' di meteo, e chi legge la mappa lo sa.
+  management String? @db.Text
+
+  province     String? @db.VarChar(8)
+  provinceName String? @db.VarChar(64)
+  region       String? @db.VarChar(64)
+
+  /// La stazione gemella su cui girano osservazioni, feature e punteggi.
+  stationId String  @unique @db.Uuid
+  station   Station @relation("SiteStation", fields: [stationId], references: [id], onDelete: Cascade)
+
+  /// Quanto dista la stazione osservata piu' vicina: dice quanta fiducia
+  /// merita il punteggio. Una cella a 10 km da ogni termometro e' pura griglia.
+  nearestStationKm Float?
+
+  /// L'esagono, per disegnarlo in mappa.
+  geom Unsupported("geometry(Polygon, 4326)")
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([forestType, altitudeM])
+  @@index([region, province])
+  @@map("prediction_site")
+}
+
+/// Poligono della Carta forestale regionale 2025 (Regione Emilia-Romagna).
+///
+/// E' la carta forestale vera, non l'uso del suolo: distingue Cerrete da
+/// Faggete da Orno-ostrieti, riporta la specie botanica prevalente e il
+/// governo del bosco. Fotointerpretazione del volo AGEA 2023.
+///
+/// Caricata da shapefile provinciali, riproiettata da RDN2008/UTM32 (EPSG:7791)
+/// a WGS84. Serve a classificare le celle per **dominanza di area**, che e'
+/// piu' onesto del campionamento puntuale che usavamo prima.
+model ForestPolygon {
+  id       String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  /// OBJECTID nella carta di origine, unico per provincia.
+  objectId Int
+  province String @db.VarChar(4)
+
+  /// Testo libero senza limite di lunghezza: sono descrizioni che arrivano da
+  /// fuori, e un tetto arbitrario romperebbe l'import alla prima provincia che
+  /// lo supera (NOMECOLTU arriva a 100 caratteri).
+  /// Tipo forestale: "Faggete", "Cerrete", "Castagneti", "Orno-ostrieti"...
+  typeCode String @db.VarChar(12)
+  typeName String
+  /// Categoria forestale, il livello sopra il tipo.
+  categoryName String?
+
+  /// Specie prevalente col nome botanico: "Fagus sylvatica - Faggio".
+  speciesCode String? @db.VarChar(8)
+  speciesName String?
+  /// Seconda specie, dove presente.
+  species2Name String?
+
+  /// Governo del bosco: ceduo, fustaia... Conta, perche' i porcini
+  /// prediligono la fustaia matura al ceduo appena tagliato.
+  management String?
+
+  municipality String?
+  areaHa       Float
+
+  geom Unsupported("geometry(MultiPolygon, 4326)")
+
+  importedAt DateTime @default(now()) @db.Timestamptz(3)
+
+  @@unique([province, objectId])
+  @@index([typeCode])
+  @@map("forest_polygon")
 }

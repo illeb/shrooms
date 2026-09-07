@@ -27,6 +27,7 @@ import { CLASS_COLOR, type Prediction } from '~/composables/useConditions';
 const props = defineProps<{ rows: Prediction[]; highlightIds?: string[] }>();
 
 const container = ref<HTMLElement | null>(null);
+const { element: shell, isFullscreen, toggle } = useFullscreen();
 const initError = ref<string | null>(null);
 const plotted = ref(0);
 
@@ -186,8 +187,20 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="relative h-full w-full">
+  <div ref="shell" class="relative h-full w-full bg-default">
     <div ref="container" class="h-full w-full" />
+
+    <UButton
+      v-if="!initError"
+      :icon="isFullscreen ? 'i-lucide-minimize' : 'i-lucide-maximize'"
+      :aria-label="isFullscreen ? 'Esci da schermo intero' : 'Schermo intero'"
+      color="neutral"
+      variant="solid"
+      size="sm"
+      class="absolute right-2 top-2 z-[1000] shadow-md"
+      @click="toggle()"
+    />
+
     <div
       v-if="!initError"
       class="pointer-events-none absolute bottom-2 right-2 z-[1000] rounded bg-default/85 px-2 py-1 text-xs text-muted"

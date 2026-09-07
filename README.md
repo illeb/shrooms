@@ -227,7 +227,29 @@ Due convenzioni che valgono ovunque:
 2. ~~Schema di dominio + adapter Arpae e Open-Meteo + ingestione~~ ✅
 3. ~~Feature store + motore di scoring + profilo `boletus-edulis` + backtest~~ ✅
 4. ~~Layer GraphQL + frontend: tabella e mappa~~ ✅ (manca il cron di ingestione)
-5. Dettaglio stazione, andamento degli ultimi 60 giorni, segnalazioni sul campo
+5. ~~Celle di bosco: griglia esagonale su carta forestale + mappa~~ ✅
+6. Dettaglio stazione, andamento degli ultimi 60 giorni, segnalazioni sul campo
+
+## Le celle di bosco
+
+Le stazioni stanno dove qualcuno ha messo un termometro, di solito a fondovalle:
+delle 188 della fascia, solo 31 superano i 900 m. I porcini stanno nel bosco, in
+quota. `PredictionSite` separa le due cose.
+
+Una cella e' un esagono di ~3 km con la sua specie dominante e la sua quota,
+costruito in tre passaggi scelti per il costo:
+
+1. **Esagoni** da `ST_HexagonGrid` in PostGIS.
+2. **Quota** dall'API elevation di Open-Meteo, che scarta subito pianura e
+   crinale nudo.
+3. **Specie dominante** dalla carta di Uso del Suolo 2023 RER via WMS
+   `GetFeatureInfo`, una interrogazione puntuale per cella. Scaricare i
+   poligoni era impraticabile: un riquadro da 0,2 gradi pesa 55 MB e novanta
+   secondi.
+
+Ogni cella ha una `Station` gemella con `source = OPEN_METEO`: cosi' riusa senza
+modifiche ingestione, feature store e motore di scoring. Nel nostro schema una
+"stazione" e' gia' un punto di misura, non un impianto fisico.
 
 ## Fonti dati
 

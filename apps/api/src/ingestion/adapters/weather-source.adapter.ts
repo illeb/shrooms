@@ -60,6 +60,18 @@ export interface FetchBatch {
  */
 export type ObservationSink = (batch: FetchBatch) => Promise<number>;
 
+/** Opzioni di lettura, ignorate dalle sorgenti a cui non si applicano. */
+export interface FetchOptions {
+  /**
+   * Usa l'endpoint del passato recente anche dove userebbe l'archivio.
+   *
+   * Serve quando la quota dell'archivio e' esaurita ma quella del passato
+   * recente no: copre 92 giorni indietro, che bastano allo spin-up del
+   * bilancio idrico piu' le finestre mobili.
+   */
+  preferRecent?: boolean;
+}
+
 /** Riepilogo di una lettura completata. */
 export interface FetchSummary {
   stationsSeen: number;
@@ -114,5 +126,6 @@ export interface WeatherSourceAdapter {
     range: DateRange,
     stations: StationUpsert[],
     sink: ObservationSink,
+    options?: FetchOptions,
   ): Promise<FetchSummary>;
 }

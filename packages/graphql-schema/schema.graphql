@@ -22,6 +22,130 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
+"""Cella di bosco con le condizioni del giorno."""
+type ForestCellType {
+  """Quota del centro cella, m s.l.m."""
+  altitudeM: Float!
+  class: String
+  code: String!
+  daysSinceWetEvent: Int
+
+  """
+  Quanta parte dell'esagono e' davvero bosco, 0..1. Una cella boscata per intero e una a mosaico coi prati non valgono lo stesso punteggio.
+  """
+  forestFraction: Float
+
+  """
+  Tipo forestale e specie prevalente, come li scrive la carta regionale: "Faggete — Fagus sylvatica".
+  """
+  forestLabel: String!
+
+  """
+  FAGGETA | CASTAGNETO | CERRETA | QUERCETO | ORNO_OSTRIETO | CONIFERE | MISTO | ALTRO
+  """
+  forestType: String!
+
+  """Geometria dell'esagono, GeoJSON serializzato."""
+  geoJson: String!
+  id: ID!
+  latitude: Float!
+  longitude: Float!
+
+  """Governo del bosco: ceduo, fustaia, ceduo in conversione."""
+  management: String
+
+  """
+  Distanza dalla stazione osservata piu vicina, km. Dice quanta fiducia merita il punteggio: una cella lontana da ogni termometro e pura griglia.
+  """
+  nearestStationKm: Float
+  precip21dMm: Float
+  province: String
+  provinceName: String
+  score: Float
+  soilWaterMm: Float
+  triggerScore: Float
+
+  """
+  Il punteggio non c'e' perche' la cella non ha ancora abbastanza storico: il bilancio idrico parte da un serbatoio inventato finche' non ha visto due mesi di pioggia vera.
+  """
+  warmup: Boolean!
+}
+
+input ForestCellsInput {
+  """Tipi di bosco da includere. Vuoto = tutti."""
+  forestTypes: [String!]
+  maxAltitudeM: Float
+
+  """
+  Giorni massimi dall'ultimo innesco. Oltre la coda dell'incubazione il terreno si e' riasciugato e la buttata e' finita.
+  """
+  maxDaysSinceRain: Int
+  minAltitudeM: Float
+
+  """
+  Giorni minimi dall'ultimo innesco di pioggia. Sotto l'incubazione minima il micelio non ha ancora avuto tempo di mettere su un carpoforo.
+  """
+  minDaysSinceRain: Int
+  minScore: Float = 0
+
+  """Solo celle con una stazione osservata entro 5 km."""
+  onlyNearStations: Boolean = false
+  species: String = "boletus-edulis"
+}
+
+"""Una cella di bosco, senza previsioni: solo che bosco e’."""
+type ForestPatchType {
+  """Quota del centro cella, m s.l.m."""
+  altitudeM: Float!
+  code: String!
+
+  """Codice del tipo forestale nella carta regionale."""
+  forestCode: String!
+
+  """Quanta parte dell'esagono e’ davvero bosco, 0..1."""
+  forestFraction: Float
+
+  """Tipo forestale e specie prevalente come li scrive la carta regionale."""
+  forestLabel: String!
+
+  """
+  FAGGETA | CASTAGNETO | CERRETA | QUERCETO | ORNO_OSTRIETO | CONIFERE | MISTO | ALTRO
+  """
+  forestType: String!
+
+  """Geometria dell'esagono, GeoJSON serializzato."""
+  geoJson: String!
+  id: ID!
+  latitude: Float!
+  longitude: Float!
+
+  """Governo del bosco: ceduo, fustaia, ceduo in conversione."""
+  management: String
+  province: String
+  provinceName: String
+}
+
+input ForestPatchesInput {
+  """Tipi da includere. Vuoto = tutti."""
+  forestTypes: [String!]
+  maxAltitudeM: Float
+  minAltitudeM: Float
+
+  """
+  Frazione boscata minima, 0..1. Alzarla lascia solo il bosco pieno e toglie le celle a mosaico con prati e coltivi.
+  """
+  minForestFraction: Float = 0
+}
+
+"""Quante celle di un tipo di bosco, e in che fascia di quota."""
+type ForestTypeCount {
+  cells: Float!
+  forestType: String!
+  maxAltitudeM: Float!
+  meanAltitudeM: Float!
+  minAltitudeM: Float!
+}
+
 """
 Condizioni di fruttificazione per una stazione in un giorno. Valuta il passato: non e una previsione meteo.
 """
@@ -87,6 +211,17 @@ type Query {
   Specie per cui esiste un profilo attivo. La select del frontend si popola da qui: aggiungere una specie non richiede toccarlo.
   """
   availableSpecies: [SpeciesModelType!]!
+
+  """
+  Celle di bosco con le condizioni dell ultimo giorno calcolato. A differenza delle stazioni, stanno dove crescono i funghi.
+  """
+  forestCells(input: ForestCellsInput): [ForestCellType!]!
+
+  """Celle di bosco con tipo forestale, specie prevalente e governo."""
+  forestPatches(input: ForestPatchesInput): [ForestPatchType!]!
+
+  """Conteggio delle celle per tipo di bosco, con quota media."""
+  forestTypeCounts: [ForestTypeCount!]!
 
   """Ultimo giorno per cui esistono punteggi, YYYY-MM-DD."""
   latestPredictionDate(species: String = "boletus-edulis"): String
