@@ -62,8 +62,14 @@ const FOREST_PATCHES = gql`
   }
 `;
 
-/** Estremi dello slider di quota: la fascia in cui le celle esistono. */
-export const ALTITUDE_BOUNDS: [number, number] = [500, 1900];
+/**
+ * Estremi dello slider di quota: la fascia in cui le celle esistono.
+ *
+ * Duecento metri e non cinquecento da quando c'e' il porcino nero: il 96,8%
+ * delle leccete toscane sta sotto i 500 m, e con il pavimento precedente la
+ * specie mediterranea non avrebbe avuto celle su cui girare.
+ */
+export const ALTITUDE_BOUNDS: [number, number] = [200, 1900];
 
 /**
  * Filtri della carta dei boschi, in query string come le altre viste.

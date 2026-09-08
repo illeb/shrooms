@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { CLASS_COLOR } from '~/composables/useConditions';
 
-const { rows, species, model, latestDate, pending, error, refresh, positives } =
+const { rows, total, species, model, latestDate, pending, error, refresh, positives } =
   await useConditions();
 const { stationIds } = useConditionFilters();
 
@@ -39,8 +39,11 @@ const legend = [
 
     <div class="mb-3 flex flex-wrap items-center justify-between gap-3 text-sm text-muted">
       <span>
-        {{ rows.length }} stazioni · <strong class="text-default">{{ positives }}</strong> con
-        condizioni in corso
+        {{ rows.length }} stazioni
+        <template v-if="total > rows.length">
+          <strong class="text-warning">di {{ total }}</strong>: elenco troncato
+        </template>
+        · <strong class="text-default">{{ positives }}</strong> con condizioni in corso
       </span>
       <div class="flex flex-wrap items-center gap-3">
         <span v-for="l in legend" :key="l.label" class="flex items-center gap-1.5 text-xs">
@@ -65,7 +68,9 @@ const legend = [
     </div>
 
     <p class="mt-4 text-xs text-muted">
-      I punti sono stazioni meteo, non boschi: dicono dove le condizioni ci sono, non dove cercare.
+      I punti sono <strong class="text-default">solo stazioni meteo osservate</strong>: dicono dove
+      le condizioni ci sono, non dove cercare. Le celle di bosco stanno nella vista Bosco — qui
+      finivano nella stessa lista, e dei punti visibili appena il 7% erano termometri veri.
       Dove manca il micelio non nasce nulla per quanto il meteo sia perfetto.
     </p>
   </UContainer>

@@ -2,7 +2,8 @@
 import type { TableColumn } from '@nuxt/ui';
 import { CLASS_BADGE, type Prediction } from '~/composables/useConditions';
 
-const { rows, species, model, latestDate, pending, error, refresh } = await useConditions();
+const { rows, total, species, model, latestDate, pending, error, refresh } =
+  await useConditions();
 const { stationIds } = useConditionFilters();
 
 /**
@@ -154,7 +155,13 @@ const sorting = ref([{ id: 'score', desc: true }]);
         <template v-if="stationIds.length > 0">
           {{ visibleRows.length }} selezionate su {{ rows.length }} ·
         </template>
-        <template v-else> {{ rows.length }} stazioni · </template>
+        <template v-else>
+          {{ rows.length }} stazioni
+          <template v-if="total > rows.length">
+            <strong class="text-warning">di {{ total }}</strong>: elenco troncato
+          </template>
+          ·
+        </template>
         <strong class="text-default">{{ positives }}</strong> con condizioni in corso
       </span>
       <UButton

@@ -79,7 +79,7 @@ const selectedButFiltered = computed(
       <RegionFilter
         :regions="regions"
         :selected="selectedRegions"
-        scope="all"
+        scope="stations"
         @toggle="toggleRegion"
         @clear="setRegions([])"
       />

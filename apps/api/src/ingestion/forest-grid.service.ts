@@ -136,7 +136,29 @@ export class ForestGridService {
       const n = Math.floor(i / ForestGridService.ELEVATION_CHUNK) + 1;
       this.logger.debug(`Quota ${n}/${chunks}: ${chunk.length} coordinate`);
 
-      const payload = await fetchOpenMeteo<{ elevation?: number[] }>(url, 'elevation', this.logger);
+      // Si tiene quello che si e' ottenuto invece di perdere tutto.
+      //
+      // L'API elevation condivide il contatore con quella meteo, e su una
+      // regione intera sono decine di chiamate: incontrare un limite a meta'
+      // e' la norma, non l'eccezione. Prima l'eccezione risaliva fino al
+      // comando e buttava via anche i quarantatre secondi di classificazione
+      // e tutte le celle gia' quotate; ora le celle raggiunte vengono salvate
+      // e un rilancio riprende da dove si era fermato - l'upsert e' idempotente
+      // e la classificazione deterministica, quindi ripetere non duplica.
+      let payload: { elevation?: number[] };
+      try {
+        payload = await fetchOpenMeteo<{ elevation?: number[] }>(url, 'elevation', this.logger);
+      } catch (error) {
+        this.logger.warn(
+          `Quote interrotte dopo ${n - 1}/${chunks} richieste: ` +
+            `${error instanceof Error ? error.message : String(error)}`,
+        );
+        this.logger.warn(
+          `${out.length} celle quotate su ${cells.length}: rilancia lo stesso ` +
+            `comando per completare le restanti.`,
+        );
+        return out;
+      }
 
       chunk.forEach((cell, j) => {
         const e = payload.elevation?.[j];

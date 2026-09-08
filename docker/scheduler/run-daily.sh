@@ -55,14 +55,41 @@ step "Open-Meteo, finestra recente" ingest:weather --source=OPEN_METEO
 #    query e zero chiamate. Quando invece un rate limit ha lasciato buchi -
 #    ed e' successo - li chiude al primo giorno in cui c'e' quota, senza che
 #    nessuno debba accorgersene e rilanciare a mano.
-INIZIO=$(date -u -d '89 days ago' '+%Y-%m-%d')
-FINE=$(date -u -d 'yesterday' '+%Y-%m-%d')
-step "Open-Meteo, recupero buchi ($INIZIO → $FINE)" \
-  ingest:weather --source=OPEN_METEO --from="$INIZIO" --to="$FINE" --only-missing
+#    Due intervalli e non uno, allineati a come Open-Meteo serve i dati:
+#    l'archivio ERA5 arriva fino a sei giorni indietro, i giorni piu' recenti
+#    stanno sull'altro endpoint.
+#
+#    La ragione e' la ripresa. `--only-missing` valuta l'intervallo **intero**:
+#    con un unico comando da 89 giorni, una cella che ne ha ricevuti 84 prima
+#    del rate limit risulta incompleta e il giorno dopo viene riscaricata da
+#    zero. Con gli intervalli separati il progresso e' durevole - chi ha finito
+#    l'archivio viene saltato domani, e resta solo la coda recente, che costa
+#    un ventesimo. Su celle appena create, dove mancano tutti i giorni, e' la
+#    differenza fra convergere in due mattine e non convergere mai.
+ARCHIVIO_DA=$(date -u -d '89 days ago' '+%Y-%m-%d')
+ARCHIVIO_A=$(date -u -d '6 days ago' '+%Y-%m-%d')
+RECENTE_DA=$(date -u -d '5 days ago' '+%Y-%m-%d')
+RECENTE_A=$(date -u -d 'yesterday' '+%Y-%m-%d')
 
-# 4. I punteggi. Senza questo passo si scarica il meteo e la mappa resta a
-#    ieri, che e' il modo piu' silenzioso di avere un'applicazione rotta.
-step "Punteggi di fruttificazione" predict:run
+step "Open-Meteo, archivio ($ARCHIVIO_DA → $ARCHIVIO_A)" \
+  ingest:weather --source=OPEN_METEO --from="$ARCHIVIO_DA" --to="$ARCHIVIO_A" --only-missing
+
+step "Open-Meteo, giorni recenti ($RECENTE_DA → $RECENTE_A)" \
+  ingest:weather --source=OPEN_METEO --from="$RECENTE_DA" --to="$RECENTE_A" --only-missing
+
+# 4. I punteggi, una specie alla volta. Senza questo passo si scarica il meteo
+#    e la mappa resta a ieri, che e' il modo piu' silenzioso di avere
+#    un'applicazione rotta.
+#
+#    Le specie stanno in una variabile e non nel codice del ciclo perche' e'
+#    l'unico punto da toccare quando se ne aggiunge una: il resto della catena
+#    non sa quante siano. Ognuna ha il suo profilo e i suoi punteggi; le
+#    feature meteo sono in comune, ed e' corretto - il bilancio idrico
+#    descrive il suolo, non il fungo.
+: "${INGESTION_SPECIES:=boletus-edulis boletus-aereus}"
+for specie in $INGESTION_SPECIES; do
+  step "Punteggi $specie" predict:run --species="$specie"
+done
 
 # 5. Potatura. Il modello guarda indietro ~120 giorni; la retention di default
 #    ne tiene 400, cioe' una stagione intera per i confronti. Serve `--apply`

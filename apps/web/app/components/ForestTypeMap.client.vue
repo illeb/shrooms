@@ -6,6 +6,7 @@ import {
   Marker,
   TileLayer,
   latLngBounds,
+  type LatLngTuple,
   type Layer,
 } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -38,7 +39,14 @@ const initError = ref<string | null>(null);
 
 let map: LeafletMap | null = null;
 let polygons: Layer | null = null;
-let markers: Marker[] = [];
+/**
+ * I marker con la loro posizione, piu' l'insieme di quelli davvero nel DOM.
+ *
+ * Tenerli separati serve al ritaglio sul riquadro visibile: la posizione si
+ * confronta senza toccare il DOM, e si aggiunge o rimuove solo la differenza.
+ */
+let markers: Array<{ marker: Marker; at: LatLngTuple }> = [];
+const shown = new Set<Marker>();
 
 /**
  * Inquadratura automatica finche' l'utente non prende il comando.
@@ -57,6 +65,7 @@ let fitting = false;
 /** Sotto questo zoom si mostrano solo i poligoni: le icone si accavallerebbero. */
 const ICON_MIN_ZOOM = 10;
 const iconsVisible = ref(false);
+const iconsDrawn = ref(0);
 
 function popupHtml(p: ForestPatch): string {
   const s = styleOf(p.forestType);
@@ -100,8 +109,10 @@ function toFeatureCollection(patches: ForestPatch[]): GeoJSON.FeatureCollection 
 function clear() {
   if (polygons && map) map.removeLayer(polygons);
   polygons = null;
-  for (const m of markers) m.remove();
+  for (const { marker } of markers) marker.remove();
   markers = [];
+  shown.clear();
+  iconsDrawn.value = 0;
 }
 
 function render(patches: ForestPatch[]) {
@@ -133,10 +144,11 @@ function render(patches: ForestPatch[]) {
     },
   }).addTo(map);
 
-  // I marker restano in memoria anche quando sono nascosti: rifarli a ogni
-  // cambio di zoom costerebbe piu' che tenerli.
-  markers = patches.map((p) =>
-    new Marker([p.latitude, p.longitude], {
+  // I marker restano in memoria anche quando sono fuori dal DOM: ricostruirli
+  // a ogni spostamento costerebbe piu' che tenerli.
+  markers = patches.map((p) => ({
+    at: [p.latitude, p.longitude] as LatLngTuple,
+    marker: new Marker([p.latitude, p.longitude], {
       icon: new DivIcon({
         html: markerHtml(p.forestType),
         className: '',
@@ -146,7 +158,7 @@ function render(patches: ForestPatch[]) {
       interactive: true,
       keyboard: false,
     }).bindPopup(popupHtml(p), { maxWidth: 340 }),
-  );
+  }));
 
   syncMarkers();
 
@@ -163,15 +175,42 @@ function anyInView(patches: ForestPatch[]): boolean {
   return patches.some((p) => view.contains([p.latitude, p.longitude]));
 }
 
-/** Icone dentro o fuori dalla mappa, secondo lo zoom. */
+/**
+ * Icone dentro o fuori dalla mappa, secondo lo zoom **e il riquadro visibile**.
+ *
+ * Il solo filtro di zoom non bastava piu'. Leaflet tiene nel DOM tutti i
+ * marker che gli aggiungi, visibili o no: con 1.296 celle passava inosservato,
+ * a 4.474 sono altrettanti nodi con un SVG dentro e lo scorrimento diventa
+ * legnoso. Qui si aggiungono solo quelli dentro la vista, con un margine del
+ * 20% perche' trascinando non compaiano dal nulla sul bordo.
+ *
+ * Si tocca solo la differenza: chi era dentro e resta dentro non viene
+ * ricreato, quindi il costo e' proporzionale a quanto ti sei spostato.
+ */
 function syncMarkers() {
   if (!map) return;
   const show = map.getZoom() >= ICON_MIN_ZOOM;
   iconsVisible.value = show;
-  for (const m of markers) {
-    if (show && !map.hasLayer(m)) m.addTo(map);
-    else if (!show && map.hasLayer(m)) m.remove();
+
+  if (!show) {
+    for (const marker of shown) marker.remove();
+    shown.clear();
+    iconsDrawn.value = 0;
+    return;
   }
+
+  const view = map.getBounds().pad(0.2);
+  for (const { marker, at } of markers) {
+    const inside = view.contains(at);
+    if (inside && !shown.has(marker)) {
+      marker.addTo(map);
+      shown.add(marker);
+    } else if (!inside && shown.has(marker)) {
+      marker.remove();
+      shown.delete(marker);
+    }
+  }
+  iconsDrawn.value = shown.size;
 }
 
 function fit(patches: ForestPatch[]) {
@@ -205,6 +244,8 @@ onMounted(async () => {
     map.on('zoomend', syncMarkers);
     map.on('moveend', () => {
       fitting = false;
+      // Anche lo spostamento, non solo lo zoom: il ritaglio segue la vista.
+      syncMarkers();
     });
     // Un trascinamento o una rotella sono l'utente; uno zoom che parte mentre
     // stiamo inquadrando noi non lo e'.
@@ -258,6 +299,7 @@ onBeforeUnmount(() => {
       class="pointer-events-none absolute bottom-2 right-2 z-[1000] rounded bg-default/85 px-2 py-1 text-xs text-muted"
     >
       {{ patches.length }} celle<span v-if="!iconsVisible"> · ingrandisci per le icone</span>
+      <span v-else-if="iconsDrawn < patches.length"> · {{ iconsDrawn }} icone in vista</span>
     </div>
 
     <div

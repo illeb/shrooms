@@ -31,6 +31,7 @@ export * from './scoring/yield-model.js';
 
 // Profili di specie
 export * from './profiles/boletus-edulis.js';
+export * from './profiles/boletus-aereus.js';
 
 // Contratti
 export * from './types.js';

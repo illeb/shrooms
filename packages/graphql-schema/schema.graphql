@@ -199,6 +199,11 @@ type FruitingPredictionType {
 input PredictionsInput {
   """Giorno YYYY-MM-DD. Omesso: l'ultimo calcolato."""
   date: String
+
+  """
+  Cosa elencare: `stations` le stazioni meteo osservate, `cells` le celle di bosco della griglia, `all` entrambe. Il default sono le stazioni: mescolarle era il modo per far sembrare celle sintetiche dei termometri.
+  """
+  kind: String = "stations"
   limit: Int = 200
   maxAltitudeM: Float
   minAltitudeM: Float
@@ -236,6 +241,11 @@ type Query {
 
   """Ultimo giorno per cui esistono punteggi, YYYY-MM-DD."""
   latestPredictionDate(species: String = "boletus-edulis"): String
+
+  """
+  Quante righe soddisfano gli stessi filtri, senza il tetto di `limit`. Serve alla vista per dire "1000 di 3201" invece di far passare il tetto della query per un totale.
+  """
+  predictionCount(input: PredictionsInput): Int!
 
   """
   Stazioni ordinate per punteggio decrescente. Senza `date` usa l'ultimo giorno calcolato, che e cio che serve alla domanda "dove ci sono le condizioni adesso".

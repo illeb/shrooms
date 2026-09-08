@@ -325,23 +325,43 @@ export class IngestionService {
     return rows.map((r) => r.stationId);
   }
 
+  /**
+   * Anagrafica delle stazioni.
+   *
+   * Regione e provincia si scrivono **solo alla creazione**, e su
+   * aggiornamento restano quelle che ci sono.
+   *
+   * Non e' un dettaglio: cio' che l'adapter dichiara e' un'etichetta di rete
+   * ("queste sono le stazioni dell'Emilia-Romagna"), mentre cio' che ci mette
+   * `stations:geocode` viene dalle coordinate vere, incrociate coi confini
+   * provinciali in PostGIS. Le coordinate vincono. Rilanciando `ingest:stations`
+   * la versione precedente sovrascriveva la seconda con la prima e ventisei
+   * stazioni oltre confine - Alpe Gorreto e Barbagelata in Liguria, Badia
+   * Tedalda in Toscana - tornavano a dichiararsi emiliane, perdendo anche la
+   * provincia. Con il filtro di regione nelle viste, era una bugia visibile.
+   */
   private async upsertStations(stations: StationUpsert[]): Promise<number> {
     let count = 0;
     for (const s of stations) {
-      const data = {
+      const misurato = {
         name: s.name,
         network: s.network ?? null,
         latitude: s.latitude,
         longitude: s.longitude,
         altitudeM: s.altitudeM ?? null,
-        region: s.region ?? null,
-        province: s.province ?? null,
         active: s.active ?? true,
       };
       await this.prisma.station.upsert({
         where: { source_externalId: { source: s.source, externalId: s.externalId } },
-        create: { source: s.source, externalId: s.externalId, ...data },
-        update: data,
+        create: {
+          source: s.source,
+          externalId: s.externalId,
+          ...misurato,
+          // Valore di partenza, finche' `stations:geocode` non lo raffina.
+          region: s.region ?? null,
+          province: s.province ?? null,
+        },
+        update: misurato,
       });
       count += 1;
     }

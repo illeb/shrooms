@@ -118,6 +118,15 @@ const DEFAULT_SOIL_DAYS = 120;
 /** Specie di default dei comandi micologici. */
 const DEFAULT_SPECIES = 'boletus-edulis';
 
+/**
+ * Quanto puo' invecchiare l'ultima ingestione prima di considerarla ferma.
+ *
+ * Ventisei ore e non ventiquattro: il job gira una volta al giorno, e con la
+ * soglia esatta una corsa che parte cinque minuti tardi o dura un po' di piu'
+ * farebbe lampeggiare l'allarme senza che nulla sia rotto.
+ */
+const INGESTION_MAX_AGE_HOURS = 26;
+
 function addMonths(date: Date, months: number): Date {
   const d = new Date(date.getTime());
   d.setUTCMonth(d.getUTCMonth() + months);
@@ -162,6 +171,56 @@ const COMMANDS: Record<string, { describe: string; usage?: string; run: Command 
       const stations = await prisma.station.count();
       const observations = await prisma.dailyObservation.count();
       logger.log(`Database OK — ${stations} stazioni, ${observations} osservazioni giornaliere.`);
+    },
+  },
+
+  'health:ingestion': {
+    describe:
+      "Esce con errore se l'ultima ingestione e' piu' vecchia della soglia " +
+      `(default ${INGESTION_MAX_AGE_HOURS} ore).`,
+    usage: '[--max-age-hours=N]',
+    run: async (app, args) => {
+      const hours = args.int('max-age-hours', INGESTION_MAX_AGE_HOURS);
+
+      // Conta solo un'ingestione **finita**, e conta anche una PARTIAL: un
+      // rate limit lascia dati validi, e non e' un motivo per dichiarare
+      // morto lo scheduler. Quello che conta e' se ha girato di recente.
+      const last = await app.get(PrismaService).ingestionRun.findFirst({
+        where: { status: { in: ['SUCCESS', 'PARTIAL'] }, finishedAt: { not: null } },
+        orderBy: { finishedAt: 'desc' },
+        select: { source: true, status: true, finishedAt: true, rowsWritten: true },
+      });
+
+      if (!last?.finishedAt) {
+        throw new Error('Nessuna ingestione completata a database.');
+      }
+
+      const ageHours = (Date.now() - last.finishedAt.getTime()) / 3_600_000;
+      const detail =
+        `ultima ingestione ${last.source} ${last.status}, ` +
+        `${last.rowsWritten ?? 0} righe, ${ageHours.toFixed(1)} h fa`;
+
+      if (ageHours > hours) {
+        throw new Error(`${detail} — oltre la soglia di ${hours} h.`);
+      }
+      logger.log(`Ingestione in salute — ${detail}.`);
+    },
+  },
+
+  'ingestion:last': {
+    describe: "Stampa la data dell'ultima ingestione completata, per lo scheduler.",
+    run: async (app) => {
+      const last = await app.get(PrismaService).ingestionRun.findFirst({
+        where: { status: { in: ['SUCCESS', 'PARTIAL'] }, finishedAt: { not: null } },
+        orderBy: { finishedAt: 'desc' },
+        select: { finishedAt: true },
+      });
+
+      // `console.log` e non il logger, con un prefisso: l'output di Nest
+      // finisce sullo stesso stdout, e lo scheduler deve poter estrarre questa
+      // riga sola senza indovinare il formato dei log.
+      const day = last?.finishedAt ? isoDay(last.finishedAt) : '';
+      console.log(`ULTIMA_INGESTIONE=${day}`);
     },
   },
 
@@ -352,6 +411,24 @@ const COMMANDS: Record<string, { describe: string; usage?: string; run: Command 
       const file = args.str('file', `${species}.yaml`);
       await app.get(SpeciesModelService).exportToYaml(species, file);
       logger.log(`Modifica i numeri e ricarica con: cli model:load --file=${file}`);
+    },
+  },
+
+  'model:builtin': {
+    describe: 'Registra come nuova versione attiva il profilo integrato nel codice.',
+    usage: `--species=${DEFAULT_SPECIES}`,
+    run: async (app, args) => {
+      // Serve dopo aver modificato un profilo in TypeScript. Senza, il
+      // percorso era senza uscita: `predict:run` legge il profilo dal
+      // database, e `model:export` esporta quello del database - cioe' quello
+      // vecchio. Si finiva a modificare il codice e vedere i punteggi non
+      // cambiare, senza capire perche'.
+      const species = args.str('species', DEFAULT_SPECIES);
+      const profile = await app.get(SpeciesModelService).loadBuiltin(species);
+      logger.log(
+        `${profile.species} v${profile.version} attivo, dal profilo integrato. ` +
+          `Ricalcola i punteggi con: cli predict:run --species=${species}`,
+      );
     },
   },
 

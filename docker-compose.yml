@@ -69,17 +69,27 @@ services:
       # mattina d'estate, con l'ultimo giorno completo ancora incerto.
       TZ: ${TZ:-Europe/Rome}
       INGESTION_AT: ${INGESTION_AT:-05:30}
-      INGESTION_RUN_ON_START: ${INGESTION_RUN_ON_START:-false}
+      INGESTION_RUN_ON_START: ${INGESTION_RUN_ON_START:-true}
+      # Le specie da calcolare ogni giorno, separate da spazio. Aggiungere un
+      # profilo vuol dire aggiungere una parola qui.
+      INGESTION_SPECIES: ${INGESTION_SPECIES:-boletus-edulis boletus-aereus}
     entrypoint: ['/app/docker/scheduler/entrypoint.sh']
-    # L'immagine e' quella dell'API e porta con se' il suo HEALTHCHECK, che
-    # interroga la porta 4000: qui non c'e' nessun server ad ascoltare, quindi
-    # il container risulterebbe unhealthy per sempre. Un falso allarme
-    # permanente e' peggio di nessun controllo, perche' e' l'unico che si
-    # impara a ignorare. Se serve un controllo vero, la domanda giusta e'
-    # "l'ultima ingestione e' finita nelle ultime 26 ore" - una query su
-    # `ingestion_run`, non un ping HTTP.
+    # Non il ping HTTP che l'immagine dell'API porta con se': qui non c'e'
+    # nessun server ad ascoltare sulla 4000, e il container risulterebbe
+    # unhealthy per sempre. La domanda giusta per uno scheduler e' un'altra -
+    # **ha prodotto un'ingestione di recente?** - e si risponde guardando
+    # `ingestion_run`. Cosi' "unhealthy" significa "ha smesso di girare", che
+    # e' il guasto vero e l'unico che valga la pena vedere in `docker ps`.
+    #
+    # Ogni mezz'ora e non ogni trenta secondi: la risposta cambia una volta al
+    # giorno, interrogarla piu' spesso apre una connessione al database per
+    # nulla.
     healthcheck:
-      disable: true
+      test: ['CMD', 'node', 'dist/src/cli/main.cli.js', 'health:ingestion']
+      interval: 30m
+      timeout: 30s
+      start_period: 2m
+      retries: 2
     profiles: ['full', 'scheduler']
 
   web:

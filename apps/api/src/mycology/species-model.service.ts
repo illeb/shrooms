@@ -1,6 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { BOLETUS_EDULIS, type SpeciesProfile } from '@mushrooms/mycology-core';
+import { BOLETUS_AEREUS, BOLETUS_EDULIS, type SpeciesProfile } from '@mushrooms/mycology-core';
 import { parse as parseYaml, stringify as stringifyYaml } from 'yaml';
 import { PrismaService } from '../prisma/prisma.service';
 import { speciesProfileSchema } from './species-profile.schema';
@@ -8,6 +8,7 @@ import { speciesProfileSchema } from './species-profile.schema';
 /** Profili integrati nel codice, usati come punto di partenza. */
 const BUILTIN_PROFILES: Record<string, SpeciesProfile> = {
   [BOLETUS_EDULIS.species]: BOLETUS_EDULIS,
+  [BOLETUS_AEREUS.species]: BOLETUS_AEREUS,
 };
 
 /**

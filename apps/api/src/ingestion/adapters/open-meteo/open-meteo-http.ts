@@ -25,7 +25,29 @@ export async function fetchOpenMeteo<T>(
   let lastError = '';
 
   for (let attempt = 1; attempt <= OPEN_METEO_MAX_RETRIES; attempt += 1) {
-    const response = await fetch(url);
+    let response: Response;
+    try {
+      response = await fetch(url);
+    } catch (error) {
+      // Un guasto di rete - DNS che non risolve, socket chiuso, connessione
+      // rifiutata - non produce una risposta, quindi `fetch` solleva. Prima
+      // questa riga stava fuori dal try e l'eccezione scavalcava l'intero
+      // ciclo di ritentativi: la funzione esisteva per resistere ai guasti
+      // transitori e si arrendeva davanti al piu' comune. Visto succedere
+      // alla prima ingestione non presidiata, con un `fetch failed` nudo che
+      // ha chiuso in PARTIAL una lettura per il resto sana.
+      lastError = `rete: ${error instanceof Error ? error.message : String(error)}`;
+      if (attempt === OPEN_METEO_MAX_RETRIES) break;
+
+      const waitMs = 2_000 * attempt;
+      logger.warn(
+        `Open-Meteo ${endpoint} ${lastError} — attendo ${Math.round(waitMs / 1000)}s ` +
+          `(tentativo ${attempt}/${OPEN_METEO_MAX_RETRIES})`,
+      );
+      await sleep(waitMs);
+      continue;
+    }
+
     if (response.ok) return (await response.json()) as T;
 
     const body = await response.text().catch(() => '');

@@ -1,5 +1,16 @@
 import { Field, Float, InputType, Int } from '@nestjs/graphql';
-import { IsInt, IsNumber, IsOptional, IsString, Matches, Max, Min } from 'class-validator';
+import { IsIn, IsInt, IsNumber, IsOptional, IsString, Matches, Max, Min } from 'class-validator';
+
+/**
+ * Che tipo di riga elencare.
+ *
+ * Le celle di bosco sono stazioni sintetiche: vivono nella stessa tabella
+ * `station`, distinte solo da `network = 'bosco'`. Comodo per il calcolo -
+ * feature e punteggi passano dallo stesso codice - ma nelle viste vanno
+ * separate, perche' una lista che le mescola ordinata per punteggio e tagliata
+ * al limite mostra soprattutto celle e sembra mostrare termometri.
+ */
+export const PREDICTION_KINDS = ['stations', 'cells', 'all'] as const;
 
 /**
  * Filtri per la lista delle condizioni.
@@ -48,6 +59,18 @@ export class PredictionsInput {
   @IsOptional()
   @IsString({ each: true })
   regions?: string[];
+
+  @Field(() => String, {
+    nullable: true,
+    defaultValue: 'stations',
+    description:
+      'Cosa elencare: `stations` le stazioni meteo osservate, `cells` le celle ' +
+      'di bosco della griglia, `all` entrambe. Il default sono le stazioni: ' +
+      'mescolarle era il modo per far sembrare celle sintetiche dei termometri.',
+  })
+  @IsOptional()
+  @IsIn(PREDICTION_KINDS)
+  kind?: string;
 
   @Field(() => Int, { nullable: true, defaultValue: 200 })
   @IsOptional()

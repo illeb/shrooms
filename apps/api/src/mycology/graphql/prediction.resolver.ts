@@ -1,5 +1,6 @@
 import { Inject } from '@nestjs/common';
-import { Args, Query, Resolver } from '@nestjs/graphql';
+import { Args, Int, Query, Resolver } from '@nestjs/graphql';
+import type { Prisma } from '../../generated/prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { PredictionsInput } from './prediction.input';
 import { FruitingPredictionType, SpeciesModelType } from './prediction.model';
@@ -27,28 +28,12 @@ export class PredictionResolver {
     @Args('input', { type: () => PredictionsInput, nullable: true })
     input?: PredictionsInput,
   ): Promise<FruitingPredictionType[]> {
-    const species = input?.species ?? 'boletus-edulis';
     const limit = clampLimit(input?.limit);
-
-    const model = await this.prisma.speciesModel.findFirst({
-      where: { species, active: true },
-      select: { id: true },
-    });
-    if (!model) return [];
-
-    const date = input?.date ? parseDay(input.date) : await this.latestDate(model.id);
-    if (!date) return [];
+    const scope = await this.scope(input);
+    if (!scope) return [];
 
     const rows = await this.prisma.fruitingPrediction.findMany({
-      where: {
-        modelId: model.id,
-        date,
-        score: { gte: input?.minScore ?? 0 },
-        station: {
-          ...altitudeWhere(input),
-          ...(input?.regions?.length ? { region: { in: input.regions } } : {}),
-        },
-      },
+      where: scope.where,
       orderBy: [{ score: 'desc' }, { stationId: 'asc' }],
       take: limit,
       select: {
@@ -79,7 +64,7 @@ export class PredictionResolver {
     // sola query in piu' invece di un ResolveField per riga: sono al massimo
     // mille stazioni, e cosi' non c'e' un N+1 da spiegare.
     const features = await this.prisma.dailyStationFeature.findMany({
-      where: { date, stationId: { in: rows.map((r) => r.station.id) } },
+      where: { date: scope.date, stationId: { in: rows.map((r) => r.station.id) } },
       select: { stationId: true, features: true },
     });
 
@@ -144,6 +129,60 @@ export class PredictionResolver {
     });
   }
 
+  @Query(() => Int, {
+    description:
+      'Quante righe soddisfano gli stessi filtri, senza il tetto di `limit`. ' +
+      'Serve alla vista per dire "1000 di 3201" invece di far passare il ' +
+      'tetto della query per un totale.',
+  })
+  async predictionCount(
+    @Args('input', { type: () => PredictionsInput, nullable: true })
+    input?: PredictionsInput,
+  ): Promise<number> {
+    const scope = await this.scope(input);
+    if (!scope) return 0;
+    return this.prisma.fruitingPrediction.count({ where: scope.where });
+  }
+
+  /**
+   * Il `where` condiviso da lista e conteggio.
+   *
+   * Uno solo e non due copie: se divergessero, la pagina direbbe "1000 di
+   * 3201" contando righe che la lista non stava selezionando, ed e' il tipo di
+   * bugia che nessuno nota.
+   *
+   * `null` quando non c'e' nulla da contare - modello inattivo o nessun giorno
+   * calcolato - cosi' chi chiama distingue "zero righe" da "non si applica".
+   */
+  private async scope(
+    input?: PredictionsInput,
+  ): Promise<{ where: Prisma.FruitingPredictionWhereInput; date: Date } | null> {
+    const species = input?.species ?? 'boletus-edulis';
+
+    const model = await this.prisma.speciesModel.findFirst({
+      where: { species, active: true },
+      select: { id: true },
+    });
+    if (!model) return null;
+
+    const date = input?.date ? parseDay(input.date) : await this.latestDate(model.id);
+    if (!date) return null;
+
+    return {
+      date,
+      where: {
+        modelId: model.id,
+        date,
+        score: { gte: input?.minScore ?? 0 },
+        station: {
+          ...altitudeWhere(input),
+          ...(input?.regions?.length ? { region: { in: input.regions } } : {}),
+          ...networkWhere(input?.kind),
+        },
+      },
+    };
+  }
+
   private async latestDate(modelId: string): Promise<Date | null> {
     const result = await this.prisma.fruitingPrediction.aggregate({
       where: { modelId },
@@ -151,6 +190,19 @@ export class PredictionResolver {
     });
     return result._max.date ?? null;
   }
+}
+
+/**
+ * Stazioni osservate o celle di bosco.
+ *
+ * Le celle sono le stazioni sintetiche con `network = 'bosco'`, create da
+ * `sites:generate`. Il default e' `stations` perche' e' cio' che le viste
+ * Tabella e Mappa dicono di mostrare.
+ */
+function networkWhere(kind: string | undefined) {
+  if (kind === 'all') return {};
+  if (kind === 'cells') return { network: 'bosco' };
+  return { NOT: { network: 'bosco' } };
 }
 
 function altitudeWhere(input?: PredictionsInput) {

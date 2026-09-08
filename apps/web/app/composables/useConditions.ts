@@ -37,6 +37,7 @@ export interface SpeciesOption {
 interface QueryResult {
   latestPredictionDate: string | null;
   activeSpeciesModel: { species: string; version: number; label: string } | null;
+  predictionCount: number;
   availableSpecies: SpeciesOption[];
   predictions: Prediction[];
 }
@@ -44,6 +45,7 @@ interface QueryResult {
 const CONDITIONS = gql`
   query Conditions($input: PredictionsInput, $species: String) {
     latestPredictionDate(species: $species)
+    predictionCount(input: $input)
     activeSpeciesModel(species: $species) {
       species
       version
@@ -129,6 +131,11 @@ export async function useConditions() {
             minAltitudeM: filters.value.minAltitudeM,
             maxAltitudeM: filters.value.maxAltitudeM,
             regions: selectedRegions.value.length > 0 ? selectedRegions.value : null,
+            // Solo le stazioni osservate. Le celle di bosco vivono nella
+            // stessa tabella con `network = 'bosco'`, e mescolarle qui
+            // riempiva la vista di punti sintetici: dei mille marker che
+            // mostrava, appena settantacinque erano termometri veri.
+            kind: 'stations',
             limit: 1000,
           },
         },
@@ -151,8 +158,19 @@ export async function useConditions() {
     },
   );
 
+  /**
+   * Quante righe soddisfano i filtri, tetto della query escluso.
+   *
+   * Serve per non spacciare una troncatura per un totale: la lista si ferma a
+   * mille, e con le sole stazioni non ci arriva mai, ma il giorno che le
+   * stazioni diventassero di piu' la pagina deve dirlo invece di far sembrare
+   * "1000" un conteggio.
+   */
+  const total = computed(() => data.value?.predictionCount ?? 0);
+
   return {
     filters,
+    total,
     pending,
     error,
     refresh,
