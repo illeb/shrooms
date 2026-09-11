@@ -139,16 +139,22 @@ export class OpenMeteoAdapter implements WeatherSourceAdapter {
     let written = 0;
     let incompleteReason: string | undefined;
 
-    // Passato consolidato -> archivio ERA5, salvo richiesta contraria.
-    if (from <= archiveEnd && !options.preferRecent) {
-      const end = to < archiveEnd ? to : archiveEnd;
-      const r = await this.query('archive', stations, from, end, sink);
-      written += r.written;
-      incompleteReason ??= r.stoppedBecause;
-    }
-
-    // Passato recente -> endpoint "forecast", che serve anche i giorni appena
-    // trascorsi non ancora consolidati in archivio. Mai oltre oggi.
+    // I giorni RECENTI per primi, e indipendenti dall'archivio.
+    //
+    // L'ordine e' invertito rispetto alla versione precedente, e la ragione e'
+    // costata un giorno di dati. Prima girava l'archivio e, se si fermava, il
+    // passo recente veniva **saltato del tutto** perche' gated su
+    // `incompleteReason === undefined`. Cosi' la parte costosa e meno urgente
+    // consumava la quota, e quella che decide la risposta di oggi non veniva
+    // nemmeno tentata: il 9 settembre 2026, con 33,9 mm di pioggia e
+    // l'umidita' del suolo raddoppiata, il dato era disponibile e il codice si
+    // rifiutava di chiederlo perche' un **altro** endpoint era a quota.
+    //
+    // Sono due servizi distinti - `api.open-meteo.com` e
+    // `archive-api.open-meteo.com` - con contatori propri, e la finestra
+    // recente costa un ventesimo dell'archivio sugli stessi punti. Non c'e'
+    // ragione perche' il fallimento di uno impedisca l'altro, e ogni ragione
+    // perche' i giorni che cambiano la mappa vengano chiesti per primi.
     const recentStart = options.preferRecent ? from : addDays(archiveEnd, 1);
     if (to >= recentStart) {
       const earliest = addDays(today, -OpenMeteoAdapter.RECENT_MAX_PAST_DAYS);
@@ -156,11 +162,19 @@ export class OpenMeteoAdapter implements WeatherSourceAdapter {
       let start = from > recentStart ? from : recentStart;
       if (start < earliest) start = earliest;
 
-      if (start <= recentEnd && incompleteReason === undefined) {
+      if (start <= recentEnd) {
         const r = await this.query('recent', stations, start, recentEnd, sink);
         written += r.written;
         incompleteReason ??= r.stoppedBecause;
       }
+    }
+
+    // Passato consolidato -> archivio ERA5, salvo richiesta contraria.
+    if (from <= archiveEnd && !options.preferRecent) {
+      const end = to < archiveEnd ? to : archiveEnd;
+      const r = await this.query('archive', stations, from, end, sink);
+      written += r.written;
+      incompleteReason ??= r.stoppedBecause;
     }
 
     return {
