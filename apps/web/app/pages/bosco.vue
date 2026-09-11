@@ -89,9 +89,9 @@ const scored = computed(() => cells.value.filter((c) => (c.score ?? 0) >= 35).le
         <div class="grid gap-5 sm:grid-cols-2">
           <UFormField
             class="sm:col-span-2"
-            label="Giorni dall'ultima pioggia"
+            label="Giorni dall'innesco"
             :hint="rainLabel"
-            help="Sotto gli 8 giorni il micelio non ha ancora avuto tempo; oltre i 28 il terreno si è riasciugato"
+            help="Dalla pioggia che conta — almeno 20 mm in cinque giorni — non dall'ultima pioggia qualsiasi. Sotto gli 8 giorni il micelio non ha ancora avuto tempo; oltre i 28 il terreno si è riasciugato"
           >
             <div class="mt-2 flex items-center gap-3">
               <USlider

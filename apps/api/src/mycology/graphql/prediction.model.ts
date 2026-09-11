@@ -77,6 +77,16 @@ export class FruitingPredictionType {
   })
   swi!: number | null;
 
+  @Field(() => Float, {
+    nullable: true,
+    description:
+      "Pioggia degli ultimi 5 giorni, mm. Sta accanto ai giorni dall'innesco " +
+      "per una ragione precisa: e' il numero che dice se ha piovuto **di " +
+      'recente**, domanda diversa da "quando e\' caduta la pioggia che conta ' +
+      'adesso". Confonderle fa sembrare un bug il funzionamento corretto.',
+  })
+  precip5dMm!: number | null;
+
   @Field(() => Float, { nullable: true, description: 'Pioggia degli ultimi 21 giorni, mm.' })
   precip21dMm!: number | null;
 

@@ -65,10 +65,20 @@ function popupHtml(p: Prediction): string {
         <span style="color:#78716c">/100</span>
       </div>
       ${row('Quota', num(p.station.altitudeM, ' m'))}
-      ${row('Giorni dalla pioggia', p.daysSinceWetEvent === null ? '—' : String(p.daysSinceWetEvent))}
-      ${row('Acqua nel suolo', num(p.soilWaterMm, ' mm'))}
+      ${row(
+        "Giorni dall'innesco",
+        p.daysSinceWetEvent === null ? 'nessun innesco' : String(p.daysSinceWetEvent),
+      )}
+      ${row('Pioggia 5 giorni', num(p.precip5dMm, ' mm'))}
       ${row('Pioggia 21 giorni', num(p.precip21dMm, ' mm'))}
+      ${row('Acqua nel suolo', num(p.soilWaterMm, ' mm'))}
       ${row('Maturazione', num(p.triggerScore, '', 2))}
+      <div style="margin-top:.45rem;color:#78716c;font-size:11px;line-height:1.35">
+        I giorni contano dall'ultima <em>pioggia d'innesco</em> - almeno 20 mm in
+        cinque giorni su suolo non arido - non dall'ultima pioggia qualsiasi. Se
+        "pioggia 5 giorni" e' bassa e i giorni sono molti, ha piovuto poco di
+        recente e il punteggio viene da un innesco precedente.
+      </div>
     </div>`;
 }
 

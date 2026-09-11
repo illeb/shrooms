@@ -22,6 +22,7 @@ export interface Prediction {
   daysSinceWetEvent: number | null;
   soilWaterMm: number | null;
   swi: number | null;
+  precip5dMm: number | null;
   precip21dMm: number | null;
   warmup: boolean;
   station: Station;
@@ -65,6 +66,7 @@ const CONDITIONS = gql`
       daysSinceWetEvent
       soilWaterMm
       swi
+      precip5dMm
       precip21dMm
       warmup
       station {

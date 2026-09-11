@@ -34,6 +34,7 @@ export interface ForestCell {
   triggerScore: number | null;
   daysSinceWetEvent: number | null;
   soilWaterMm: number | null;
+  precip5dMm: number | null;
   precip21dMm: number | null;
   geoJson: string;
 }
@@ -60,6 +61,7 @@ const FOREST_CELLS = gql`
       triggerScore
       daysSinceWetEvent
       soilWaterMm
+      precip5dMm
       precip21dMm
       geoJson
     }

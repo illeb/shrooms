@@ -92,6 +92,16 @@ export class ForestCellType {
   @Field(() => Float, { nullable: true }) triggerScore!: number | null;
   @Field(() => Int, { nullable: true }) daysSinceWetEvent!: number | null;
   @Field(() => Float, { nullable: true }) soilWaterMm!: number | null;
+
+  @Field(() => Float, {
+    nullable: true,
+    description:
+      'Pioggia degli ultimi 5 giorni. Sta accanto ai giorni dall’innesco per ' +
+      'una ragione precisa: e’ il numero che dice se ha piovuto **di recente**, ' +
+      'domanda diversa da "quando e’ caduta la pioggia che conta adesso".',
+  })
+  precip5dMm!: number | null;
+
   @Field(() => Float, { nullable: true }) precip21dMm!: number | null;
 
   @Field(() => String, { description: "Geometria dell'esagono, GeoJSON serializzato." })
@@ -271,6 +281,7 @@ export class ForestCellResolver {
     return rows.map((r) => ({
       ...r,
       soilWaterMm: numberOrNull(r.features?.['soilWaterMm']),
+      precip5dMm: numberOrNull(r.features?.['p5']),
       precip21dMm: numberOrNull(r.features?.['p21']),
     }));
   }

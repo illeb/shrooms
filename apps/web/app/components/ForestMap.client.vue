@@ -63,10 +63,19 @@ function popupHtml(c: ForestCell): string {
              </div>`
           : ''
       }
-      ${row('Giorni dalla pioggia', c.daysSinceWetEvent === null ? '—' : String(c.daysSinceWetEvent))}
-      ${row('Acqua nel suolo', num(c.soilWaterMm, ' mm'))}
+      ${row(
+        "Giorni dall'innesco",
+        c.daysSinceWetEvent === null ? 'nessun innesco' : String(c.daysSinceWetEvent),
+      )}
+      ${row('Pioggia 5 giorni', num(c.precip5dMm, ' mm'))}
       ${row('Pioggia 21 giorni', num(c.precip21dMm, ' mm'))}
+      ${row('Acqua nel suolo', num(c.soilWaterMm, ' mm'))}
       ${row('Maturazione', num(c.triggerScore, '', 2))}
+      <div style="margin-top:.45rem;color:#78716c;font-size:11px;line-height:1.35">
+        I giorni contano dall'ultima <em>pioggia d'innesco</em> - almeno 20 mm in
+        cinque giorni su suolo non arido - non dall'ultima pioggia qualsiasi.
+        Dieci millimetri bagnano la superficie e se ne vanno.
+      </div>
       ${row('Bosco nella cella', c.forestFraction === null ? '—' : `${Math.round(c.forestFraction * 100)}%`)}
       ${c.management ? row('Governo', c.management) : ''}
       ${row('Stazione più vicina', anchor)}

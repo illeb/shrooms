@@ -96,12 +96,27 @@ const columns: TableColumn<Prediction>[] = [
   },
   {
     accessorKey: 'daysSinceWetEvent',
-    header: sortable('Giorni dalla pioggia'),
+    header: sortable("Giorni dall'innesco"),
     cell: ({ row }) =>
       h(
         'span',
         { class: 'tabular-nums' },
-        row.original.daysSinceWetEvent === null ? '—' : String(row.original.daysSinceWetEvent),
+        row.original.daysSinceWetEvent === null
+          ? '—'
+          : String(row.original.daysSinceWetEvent),
+      ),
+  },
+  {
+    // Accanto ai giorni dall'innesco, di proposito: le due colonne insieme
+    // distinguono "non ha piovuto" da "ha piovuto ma non abbastanza", che
+    // guardando solo i giorni sembrano la stessa cosa.
+    accessorKey: 'precip5dMm',
+    header: sortable('Pioggia 5 giorni'),
+    cell: ({ row }) =>
+      h(
+        'span',
+        { class: 'tabular-nums' },
+        row.original.precip5dMm === null ? '—' : `${row.original.precip5dMm.toFixed(1)} mm`,
       ),
   },
   {

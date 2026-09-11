@@ -58,6 +58,11 @@ type ForestCellType {
   Distanza dalla stazione osservata piu vicina, km. Dice quanta fiducia merita il punteggio: una cella lontana da ogni termometro e pura griglia.
   """
   nearestStationKm: Float
+
+  """
+  Pioggia degli ultimi 5 giorni. Sta accanto ai giorni dall’innesco per una ragione precisa: e’ il numero che dice se ha piovuto **di recente**, domanda diversa da "quando e’ caduta la pioggia che conta adesso".
+  """
+  precip5dMm: Float
   precip21dMm: Float
   province: String
   provinceName: String
@@ -172,6 +177,11 @@ type FruitingPredictionType {
 
   """Stagione e quota compatibili: 1 o 0."""
   phenologyScore: Float!
+
+  """
+  Pioggia degli ultimi 5 giorni, mm. Sta accanto ai giorni dall'innesco per una ragione precisa: e' il numero che dice se ha piovuto **di recente**, domanda diversa da "quando e' caduta la pioggia che conta adesso". Confonderle fa sembrare un bug il funzionamento corretto.
+  """
+  precip5dMm: Float
 
   """Pioggia degli ultimi 21 giorni, mm."""
   precip21dMm: Float

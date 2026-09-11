@@ -79,6 +79,7 @@ export class PredictionResolver {
         date: isoDay(r.date),
         soilWaterMm: numberOrNull(f?.['soilWaterMm']),
         swi: numberOrNull(f?.['swi']),
+        precip5dMm: numberOrNull(f?.['p5']),
         precip21dMm: numberOrNull(f?.['p21']),
       };
     });
