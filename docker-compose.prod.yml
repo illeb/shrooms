@@ -1,0 +1,121 @@
+# Lo stack di produzione, quello che gestisce Arcane.
+#
+# Differenza sostanziale dal `docker-compose.yml` di sviluppo: qui non c'e'
+# nessun `build:`. Le immagini arrivano gia' fatte da GHCR, costruite da
+# GitHub Actions. Non e' una preferenza di stile - la macchina che esegue
+# questo file e' un portatile con due core e poca RAM libera, dove `nuxt
+# build` non arriva in fondo.
+#
+# Aggiornare una feature diventa quindi: merge su main, Actions costruisce,
+# e qui `pull` + `up -d`. Il portatile non compila mai niente.
+#
+# Serve un file `.env` accanto a questo con almeno POSTGRES_PASSWORD e
+# GITHUB_REPOSITORY. Arcane li gestisce come variabili dello stack.
+
+name: mushrooms
+
+services:
+  postgres:
+    # Multi-arch: postgis/postgis pubblica solo amd64 e questa variante e'
+    # quella indicata dal loro README.
+    image: imresamu/postgis:17-3.5-alpine
+    container_name: mushrooms-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-mushrooms}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?serve una password, non lasciarla al default}
+      POSTGRES_DB: ${POSTGRES_DB:-mushrooms}
+      POSTGRES_INITDB_ARGS: '--encoding=UTF8 --locale=C'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    # Nessun `ports:`. Il database parla solo con gli altri container sulla
+    # rete interna: esporlo sulla LAN sarebbe un servizio in piu' da difendere
+    # senza nessuno che lo usi da fuori.
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-mushrooms} -d ${POSTGRES_DB:-mushrooms}']
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    # Postgres si prende volentieri tutta la memoria che trova, e su questa
+    # macchina non ce n'e'. Il tetto e' basso di proposito: il database e'
+    # ~2,5 GB e le query pesanti sono poche e notturne.
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+
+  api:
+    image: ghcr.io/${GITHUB_REPOSITORY:-illeb/shrooms}-api:${IMAGE_TAG:-latest}
+    container_name: mushrooms-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-mushrooms}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-mushrooms}?schema=public
+    ports:
+      - '${API_PORT:-4000}:4000'
+    # L'entrypoint dell'immagine applica `prisma migrate deploy` prima di
+    # servire. E' l'unico servizio che lo fa: lo scheduler usa la stessa
+    # immagine ma sovrascrive l'entrypoint, cosi' al primo avvio non si
+    # contendono il lock delle migrazioni.
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  web:
+    image: ghcr.io/${GITHUB_REPOSITORY:-illeb/shrooms}-web:${IMAGE_TAG:-latest}
+    container_name: mushrooms-web
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      NODE_ENV: production
+      # L'indirizzo che il BROWSER usera' per parlare con l'API, non quello
+      # interno alla rete di Docker: la pagina gira sul portatile di chi
+      # guarda, e `http://api:4000` la' non esiste.
+      NUXT_PUBLIC_GRAPHQL_ENDPOINT: ${PUBLIC_GRAPHQL_ENDPOINT:?metti l-IP o l-hostname raggiungibile dai client, es. http://192.168.1.175:4000/graphql}
+    ports:
+      - '${WEB_PORT:-3000}:3000'
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+
+  scheduler:
+    image: ghcr.io/${GITHUB_REPOSITORY:-illeb/shrooms}-api:${IMAGE_TAG:-latest}
+    container_name: mushrooms-scheduler
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-mushrooms}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-mushrooms}?schema=public
+      # Tutto il sistema ragiona per giorni locali italiani: uno scheduler in
+      # UTC lancerebbe l'ingestione alle 7:30 d'estate, con l'ultimo giorno
+      # completo ancora incerto.
+      TZ: ${TZ:-Europe/Rome}
+      INGESTION_AT: ${INGESTION_AT:-05:30}
+      INGESTION_RUN_ON_START: ${INGESTION_RUN_ON_START:-true}
+      INGESTION_SPECIES: ${INGESTION_SPECIES:-boletus-edulis boletus-aereus}
+    entrypoint: ['/app/docker/scheduler/entrypoint.sh']
+    healthcheck:
+      test: ['CMD', 'node', 'dist/src/cli/main.cli.js', 'health:ingestion']
+      interval: 30m
+      timeout: 30s
+      start_period: 5m
+      retries: 2
+    # Il passo piu' affamato e' `predict:run`, che costruisce le feature di
+    # oltre cinquemila stazioni. Con meno di questo va in OOM a meta' notte,
+    # che e' il modo peggiore di scoprirlo.
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+volumes:
+  postgres-data:
