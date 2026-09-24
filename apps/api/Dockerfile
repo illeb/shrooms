@@ -45,12 +45,18 @@ COPY --from=build /app/apps/api/prisma.config.ts ./apps/api/prisma.config.ts
 # sola immagine da costruire e da tenere aggiornata, e la certezza che il cron
 # esegua esattamente il codice che gira in produzione.
 COPY docker/scheduler/ ./docker/scheduler/
+COPY docker/api/ ./docker/api/
 
-RUN chmod +x /app/docker/scheduler/*.sh
+RUN chmod +x /app/docker/scheduler/*.sh /app/docker/api/*.sh
 
 WORKDIR /app/apps/api
 USER node
 EXPOSE 4000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:4000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+# L'entrypoint applica le migrazioni e poi cede il posto al CMD. Lo scheduler
+# usa la stessa immagine ma sovrascrive l'entrypoint in compose: le migrazioni
+# le applica l'API, e farle fare a due processi in parallelo al primo avvio
+# significa vederli litigare sul lock di Prisma.
+ENTRYPOINT ["/app/docker/api/entrypoint.sh"]
 CMD ["node", "dist/src/main.js"]

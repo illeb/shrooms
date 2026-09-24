@@ -1,0 +1,87 @@
+# Costruisce le immagini e le pubblica su GHCR.
+#
+# Esiste per una ragione misurata, non per eleganza: la macchina che le deve
+# eseguire e' un portatile con un i3-7130U, due core, e meno di un giga di RAM
+# libera. `nuxt build` la' dentro va in OOM. Il build sta qui, dove ci sono
+# quattro core e sette giga, e il portatile fa solo `docker compose pull`.
+#
+# Solo `linux/amd64`: il bersaglio e' quello. Aggiungere arm64 raddoppierebbe
+# i tempi per un'architettura che nessuno usa in produzione qui - chi sviluppa
+# su Mac costruisce in locale con `docker compose build`, che sceglie la sua.
+name: images
+
+on:
+  push:
+    branches: [main]
+    # I percorsi che non entrano in un'immagine non meritano un build da otto
+    # minuti: un README o una GitHub Action modificata non cambiano cio' che
+    # gira sul server.
+    paths-ignore:
+      - '**.md'
+      - 'profiles/**'
+  # Utile per ricostruire senza un commit finto, per esempio dopo aver
+  # cambiato un segreto o per rifare un tag andato storto.
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Serve a pubblicare su GHCR con il GITHUB_TOKEN automatico: nessun
+      # segreto da creare a mano e nessuna password da ruotare.
+      packages: write
+
+    strategy:
+      # Le due immagini sono indipendenti: se il web fallisce, l'API e' gia'
+      # pubblicata e lo stack puo' essere aggiornato a meta'. Meglio che
+      # perdere entrambe per un errore in una.
+      fail-fast: false
+      matrix:
+        include:
+          # L'immagine dell'API la usano due servizi, `api` e `scheduler`:
+          # stesso contenuto, comando diverso. Una sola build per entrambi.
+          - name: api
+            dockerfile: apps/api/Dockerfile
+          - name: web
+            dockerfile: apps/web/Dockerfile
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository }}-${{ matrix.name }}
+          # Due tag per ogni build: `latest` e' quello che insegue lo stack,
+          # lo SHA e' quello a cui si torna quando un aggiornamento rompe
+          # qualcosa. Senza il secondo, "torna a ieri" non e' un'operazione
+          # possibile.
+          tags: |
+            type=raw,value=latest
+            type=sha,format=long
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # La cache vive nel registry accanto all'immagine: i runner sono
+          # effimeri e senza questa ogni build reinstallerebbe le dipendenze
+          # da zero.
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,scope=${{ matrix.name }},mode=max
