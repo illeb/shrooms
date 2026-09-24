@@ -1,8 +1,24 @@
 /**
- * Profilo di specie: porcino nero, Boletus aereus.
+ * Profilo di specie: i porcini termofili, Boletus aereus e B. reticulatus.
+ *
+ * DUE SPECIE IN UN PROFILO, e non per comodita'. Uno studio genetico colloca
+ * il reticulatus come **sister species** dell'aereus: sono i due parenti piu'
+ * stretti del gruppo, entrambi termofili, entrambi su latifoglie, con habitat
+ * e stagione largamente sovrapposti. Gli inneschi di fruttificazione di
+ * nessuna delle due sono caratterizzati in letteratura, e separarle in due
+ * profili sarebbe una precisione che non abbiamo.
+ *
+ * Nei nostri dati la sola dimensione che le separerebbe e' la quota: 576 celle
+ * su 4.508 stanno sopra il tetto che l'aereus da solo avrebbe. Due profili
+ * distinti sarebbero stati identici all'87%.
+ *
+ * Cio' che il reticulatus aggiunge non e' un secondo insieme di numeri, e'
+ * **l'estensione dell'areale in alto**: dove l'aereus si fermava alla quercia
+ * mediterranea, la coppia arriva su castagno e faggio a 1100-1200 metri. Ed e'
+ * proprio dove i due profili precedenti tacevano entrambi.
  *
  * PREMESSA ONESTA, da leggere prima dei numeri. Per il gruppo edulis avevamo
- * due studi quantitativi; per B. aereus la letteratura e' molto piu' magra, e
+ * due studi quantitativi; per queste due la letteratura e' molto piu' magra, e
  * una delle poche affermazioni nette che si trovano e' proprio che **gli
  * inneschi della fruttificazione di questa specie non sono caratterizzati**:
  * anche dove il micelio e' confermato nel suolo con metodi molecolari, il
@@ -30,11 +46,18 @@
  *          luglio e agosto.
  *
  *  [WB23]  Studio su castagneti italiani (Frontiers in Soil Science 2023) su
- *          micelio di B. edulis e B. reticulatus: eccesso e deficit idrico e
- *          la differenza P-PET dei **precedenti 1-2 mesi** influenzano
+ *          micelio di B. edulis e **B. reticulatus**: eccesso e deficit idrico
+ *          e la differenza P-PET dei **precedenti 1-2 mesi** influenzano
  *          significativamente il micelio, mentre la temperatura dell'aria non
- *          mostra effetto sul micelio. Conferma il meccanismo idrico del
- *          motore; nota bene: parla di micelio nel suolo, non di carpofori.
+ *          mostra effetto sul micelio. Nota bene: parla di micelio nel suolo,
+ *          non di carpofori.
+ *
+ *          Da quando il profilo copre anche il reticulatus questa e' una fonte
+ *          **diretta** e non di supporto, ed e' l'unico dato quantitativo su
+ *          una delle due specie di questo file - piu' solido dell'intervallo
+ *          di genere su cui poggia la regola termica. Il castagneto, poi, e'
+ *          il bosco dello studio ed e' il tipo forestale dove oggi il profilo
+ *          da' i punteggi piu' alti: 745 celle, 32,8 di media.
  *
  *  [DERIV] Derivato dal profilo boletus-edulis spostando un parametro dove le
  *          due ecologie divergono. Nessuna fonte quantitativa: sono i numeri
@@ -69,6 +92,15 @@
  * cambia cio' che l'**organismo** chiede. Se cambia solo cio' che
  * l'**ambiente** offre, il posto giusto e' il bilancio idrico, e li' e' gia'
  * sistemato.
+ *
+ * E la regola ha superato subito una seconda prova. Le fonti divulgative
+ * descrivono il reticulatus come **xerofilo**, "ama luoghi caldi e asciutti",
+ * e la tentazione era di nuovo abbassare le soglie idriche. Non l'ho fatto:
+ * "preferisce siti asciutti" e' un'affermazione sul **sito** - soleggiato,
+ * drenante, siliceo - non sul fabbisogno d'acqua di un carpoforo, che resta
+ * acqua al 90%. Un suolo drenante lo descrive `awcMm`, l'esposizione la
+ * descriverebbe un attributo di sito; nessuna delle due e' una soglia di
+ * specie. E la fonte e' divulgativa, non uno studio.
  */
 
 import type { SpeciesProfile } from '../types.js';
@@ -76,7 +108,11 @@ import type { SpeciesProfile } from '../types.js';
 export const BOLETUS_AEREUS: SpeciesProfile = {
   species: 'boletus-aereus',
   version: 1,
-  label: 'Porcino nero (B. aereus)',
+  // Lo slug resta `boletus-aereus` e l'etichetta nomina la coppia: e' la
+  // stessa convenzione del profilo edulis, dove lo slug e' `boletus-edulis` e
+  // l'etichetta dice "gruppo edulis". Lo slug nomina la specie tipo, non
+  // l'insieme.
+  label: 'Porcini termofili (aereus, reticulatus)',
 
   water: {
     // Identico all'edulis, per due ragioni che convergono.
@@ -193,13 +229,19 @@ export const BOLETUS_AEREUS: SpeciesProfile = {
       // bassa quota che raccomandava il crinale.
       //
       // La quota entra come regola sua e non nascosta nella temperatura,
-      // perche' e' cio' che le fonti dicono davvero: l'areale e' la quercia
-      // mediterranea, sughera e leccio, non la faggeta d'altura. Plateau fino
-      // a 600 m, poi discesa: a 900 m vale ancora la meta', sopra i 1000 la
-      // fascia fenologica non c'e' piu' e il punteggio e' zero comunque.
+      // perche' e' cio' che le fonti dicono davvero: il baricentro della
+      // coppia e' la collina e la bassa montagna, non la faggeta d'altura.
+      //
+      // La discesa arriva a 1500 e non a 1200 come nella versione precedente,
+      // per non contraddire la fascia fenologica: con il tetto a 1400 m, una
+      // regola che si azzera a 1200 avrebbe dato zero a celle che la fenologia
+      // dichiara valide - due parti dello stesso profilo che si smentiscono.
+      // A 1179 m, la quota media delle faggete in questione, vale 0,40: il
+      // reticulatus ci sta, ma e' il bordo del suo areale e il punteggio lo
+      // dice.
       id: 'altitude-preference',
       feature: 'altitude',
-      membership: { type: 'trapezoid', a: -1, b: 0, c: 600, d: 1200 },
+      membership: { type: 'trapezoid', a: -1, b: 0, c: 700, d: 1500 },
       weight: 1,
       onMissing: 'skip',
     },
@@ -263,19 +305,29 @@ export const BOLETUS_AEREUS: SpeciesProfile = {
     // se una qualsiasi fascia copre il giorno, quindi con fasce sovrapposte
     // vincerebbe sempre la piu' permissiva.
     //
-    // Sopra i 1000 m non c'e' fascia, ed e' una scelta esplicita: nessuna
-    // fascia significa punteggio fenologico zero, cioe' "qui questa specie non
-    // fruttifica".
+    // La fascia alta e' andata e tornata, e le due volte per motivi diversi:
+    // vale la pena tenerne traccia perche' e' la differenza fra un tetto
+    // arbitrario e uno che sa cosa sta escludendo.
     //
-    // CORRETTO: la prima versione arrivava a 1400 m, perche' fra gli ospiti
-    // dell'aereus le fonti citano anche il faggio. Ma un ospite possibile non
-    // e' un areale: in Appennino questa specie sta sulla quercia mediterranea
-    // e sul castagno, e quei 400 metri in piu' servivano solo a farle prendere
-    // i punteggi migliori dove non vive. Sopra i 1000 m la risposta giusta e'
-    // il profilo edulis.
+    // Nella prima versione arrivava a 1400 m perche' fra gli ospiti dell'aereus
+    // le fonti citano anche il faggio - e l'ho togliata, perche' un ospite
+    // possibile non e' un areale: l'aereus da solo sta sulla quercia
+    // mediterranea, e quei 400 metri servivano solo a fargli prendere i
+    // punteggi migliori dove non vive.
+    //
+    // Ora torna, perche' il profilo copre anche il **reticulatus**, che su
+    // faggio e castagno a 1100-1200 metri ci sta davvero. Misurato prima di
+    // rimetterla: 389 celle di faggeta e castagneto fra 1000 e 1400 m, a 21 C
+    // d'aria, dove entrambi i profili dicevano zero - l'edulis perche' 21 C e'
+    // fuori dal suo trapezio, l'aereus perche' non aveva fascia. Un punto
+    // cieco fra due specie, che e' precisamente il posto dove sta questa.
+    //
+    // La finestra si accorcia salendo, e sopra i 1400 non c'e' fascia: quella
+    // e' faggeta d'altura e la risposta giusta resta il profilo edulis.
     altitudeBands: [
-      { fromM: 0, toM: 499, doyFrom: 152, doyTo: 305 }, //   1 giu - 1 nov
-      { fromM: 500, toM: 999, doyFrom: 166, doyTo: 288 }, // 15 giu - 15 ott
+      { fromM: 0, toM: 499, doyFrom: 152, doyTo: 305 }, //    1 giu - 1 nov
+      { fromM: 500, toM: 999, doyFrom: 166, doyTo: 288 }, //  15 giu - 15 ott
+      { fromM: 1000, toM: 1400, doyFrom: 182, doyTo: 274 }, // 1 lug - 1 ott
     ],
   },
 
